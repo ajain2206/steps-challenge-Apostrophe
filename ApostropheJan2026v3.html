@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apostrophe - Jan 2026 - Community Steps Challenge</title>
+    <title>Community Steps Challenge</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-2 sm:p-4">
     <div class="max-w-6xl mx-auto">
         <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-indigo-900 mb-2 mt-4">
-            🚶 Apostrophe - Jan 2026 - Community Steps Challenge
+            🚶 Community Steps Challenge
         </h1>
         <p class="text-center text-gray-600 mb-4 text-sm sm:text-base">Track your daily steps with your community</p>
 
@@ -631,7 +631,9 @@
                     type: 'line',
                     data: {
                         labels: recentDaily.map(([date]) => {
-                            const d = new Date(date);
+                            // Parse date as local date to avoid timezone issues
+                            const [year, month, day] = date.split('-').map(Number);
+                            const d = new Date(year, month - 1, day); // month is 0-indexed
                             return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         }),
                         datasets: [{
