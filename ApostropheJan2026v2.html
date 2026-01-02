@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apostrophe - Jan 2026 - Community Steps Challenge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-2 sm:p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-indigo-900 mb-2 mt-4">
+            🚶 Apostrophe - Jan 2026 - Community Steps Challenge
+        </h1>
+        <p class="text-center text-gray-600 mb-4 text-sm sm:text-base">Track your daily steps with your community</p>
+
+        <!-- Setup Notice -->
+        <div id="setupNotice" class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+            <p class="text-xs sm:text-sm text-yellow-800">
+                ⚠️ <strong>Setup Required:</strong> Please update the SCRIPT_URL variable in this file with your Google Apps Script Web App URL.
+            </p>
+        </div>
+
+        <!-- Toggle between Register and Submit -->
+        <div class="flex justify-center mb-6">
+            <div class="bg-white rounded-lg shadow-md p-1 inline-flex w-full max-w-md">
+                <button
+                    id="btnSubmit"
+                    onclick="showView('submit')"
+                    class="flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors bg-blue-600 text-white text-sm sm:text-base"
+                >
+                    Submit Steps
+                </button>
+                <button
+                    id="btnRegister"
+                    onclick="showView('register')"
+                    class="flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors text-gray-600 hover:bg-gray-100 text-sm sm:text-base"
+                >
+                    Register
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 border-l-4 border-blue-500">
+                <h3 class="text-gray-600 text-xs sm:text-sm font-medium">Total Community Steps</h3>
+                <p id="totalSteps" class="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-600 mt-1 sm:mt-2">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 border-l-4 border-green-500">
+                <h3 class="text-gray-600 text-xs sm:text-sm font-medium">Registered Participants</h3>
+                <p id="totalParticipants" class="text-2xl sm:text-3xl md:text-4xl font-bold text-green-600 mt-1 sm:mt-2">0</p>
+            </div>
+        </div>
+
+        <!-- 10 Million Goal Progress -->
+        <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm sm:text-base md:text-lg font-bold text-gray-800">🎯 Goal: 10M Steps</h3>
+                <span id="goalPercentage" class="text-lg sm:text-xl md:text-2xl font-bold text-indigo-600">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-4 sm:h-6 mb-2">
+                <div id="goalProgress" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-4 sm:h-6 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <div class="flex items-center justify-between text-xs sm:text-sm text-gray-600">
+                <span id="goalCurrent">0 steps</span>
+                <span id="goalRemaining">10,000,000 to go!</span>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-4 sm:p-6 flex items-center gap-3 mx-4">
+                <div class="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600"></div>
+                <span class="text-gray-700 text-sm sm:text-base">Processing...</span>
+            </div>
+        </div>
+
+        <!-- Registration Form -->
+        <div id="registerView" class="hidden">
+            <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 mb-4 sm:mb-6">
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">New User Registration</h2>
+                <p class="text-sm sm:text-base text-gray-600 mb-4">Register once to start tracking your steps</p>
+                <form id="registerForm" class="space-y-3 sm:space-y-4" onsubmit="handleRegister(event)">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Full Name *
+                            </label>
+                            <input
+                                type="text"
+                                id="regName"
+                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="e.g., Ajay Kumar"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Flat Number *
+                            </label>
+                            <input
+                                type="text"
+                                id="regFlatNo"
+                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="e.g., A-101"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Age *
+                            </label>
+                            <input
+                                type="number"
+                                id="regAge"
+                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="e.g., 35"
+                                min="1"
+                                max="120"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Gender *
+                            </label>
+                            <select
+                                id="regGender"
+                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            >
+                                <option value="">Select gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button
+                        type="submit"
+                        class="w-full bg-blue-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg"
+                    >
+                        Register
+                    </button>
+                </form>
+                <p id="registerStatus" class="text-sm mt-4 text-center"></p>
+            </div>
+
+            <!-- Registered Users List -->
+            <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6">
+                <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Registered Participants</h2>
+                <div id="registeredList" class="space-y-2 max-h-96 overflow-y-auto">
+                    <p class="text-gray-500 text-center py-4 text-sm sm:text-base">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Steps Form -->
+        <div id="submitView">
+            <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 mb-4 sm:mb-6">
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">Submit Your Steps</h2>
+                <form id="submitForm" class="space-y-3 sm:space-y-4" onsubmit="handleSubmitSteps(event)">
+                    <div class="grid grid-cols-1 gap-3 sm:gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Date *
+                            </label>
+                            <input
+                                type="date"
+                                id="submitDate"
+                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                            <p class="text-xs text-gray-500 mt-1">💡 Select from Jan 1, 2026 onwards</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Select Your Name & Flat *
+                            </label>
+                            <select
+                                id="participantSelect"
+                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            >
+                                <option value="">-- Select from registered participants --</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">💡 Don't see your name? <a href="#" onclick="showView('register'); return false;" class="text-blue-600 hover:underline font-medium">Register here</a></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Steps *
+                            </label>
+                            <input
+                                type="number"
+                                id="submitSteps"
+                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="e.g., 10000"
+                                min="0"
+                                required
+                            />
+                        </div>
+                    </div>
+                    <button
+                        type="submit"
+                        class="w-full bg-blue-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg"
+                    >
+                        Submit Steps
+                    </button>
+                </form>
+                <p id="submitStatus" class="text-sm mt-4 text-center"></p>
+            </div>
+
+            <!-- Toggle Dashboard -->
+            <button
+                onclick="toggleDashboard()"
+                id="toggleBtn"
+                class="w-full bg-indigo-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg hover:bg-indigo-700 transition-colors font-semibold mb-4 sm:mb-6 text-base sm:text-lg"
+            >
+                ▼ View Community Dashboard
+            </button>
+
+            <!-- Dashboard -->
+            <div id="dashboard" class="hidden space-y-4 sm:space-y-6">
+                <!-- Daily Steps Trend -->
+                <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                    <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">📈 Daily Community Steps</h2>
+                    <div class="h-64 sm:h-80">
+                        <canvas id="dailyStepsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Leaderboard -->
+                <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                    <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">🏆 Leaderboard</h2>
+                    <div id="leaderboard" class="space-y-2">
+                        <p class="text-gray-500 text-center py-4 text-sm sm:text-base">Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                        <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Steps by Age Group</h2>
+                        <div class="h-64">
+                            <canvas id="ageChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                        <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Steps by Gender</h2>
+                        <div class="h-64">
+                            <canvas id="genderChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ IMPORTANT: Replace this URL with your Google Apps Script Web App URL
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdAp6QU0QXqnf2h3C6EikTf5NMOBBt73q9RJKmhLK9gHufKjevrzHHjkHvqy2Mtrvg/exec';
+
+        let ageChart = null;
+        let genderChart = null;
+        let dailyStepsChart = null;
+        let cachedData = null;
+
+        const GOAL_STEPS = 10000000; // 10 million steps goal
+
+        // Helper function to create unique key from name and flat number
+        function createUniqueKey(name, flatNo) {
+            return (name.toUpperCase().trim() + '_' + flatNo).replace(/\s+/g, '_');
+        }
+
+        // Show/hide loading indicator
+        function showLoading(show) {
+            document.getElementById('loadingIndicator').classList.toggle('hidden', !show);
+        }
+
+        // Show view
+        function showView(view) {
+            if (view === 'register') {
+                document.getElementById('registerView').classList.remove('hidden');
+                document.getElementById('submitView').classList.add('hidden');
+                document.getElementById('btnRegister').className = 'flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors bg-blue-600 text-white text-sm sm:text-base';
+                document.getElementById('btnSubmit').className = 'flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors text-gray-600 hover:bg-gray-100 text-sm sm:text-base';
+                loadRegisteredList();
+            } else {
+                document.getElementById('registerView').classList.add('hidden');
+                document.getElementById('submitView').classList.remove('hidden');
+                document.getElementById('btnSubmit').className = 'flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors bg-blue-600 text-white text-sm sm:text-base';
+                document.getElementById('btnRegister').className = 'flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors text-gray-600 hover:bg-gray-100 text-sm sm:text-base';
+            }
+        }
+
+        // Fetch data from Google Sheets
+        async function fetchData() {
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const data = await response.json();
+                
+                if (data.success) {
+                    cachedData = data;
+                    return data;
+                } else {
+                    throw new Error(data.message || 'Failed to fetch data');
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                showStatus('submitStatus', 'Error loading data. Please refresh the page.', 'error');
+                return null;
+            }
+        }
+
+        // Send data to Google Sheets
+        async function sendData(action, payload) {
+            try {
+                showLoading(true);
+                
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        ...payload
+                    })
+                });
+                
+                const data = await response.json();
+                showLoading(false);
+                
+                return data;
+            } catch (error) {
+                showLoading(false);
+                console.error('Error sending data:', error);
+                return {
+                    success: false,
+                    message: 'Error connecting to server. Please try again.'
+                };
+            }
+        }
+
+        // Handle registration
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('regName').value.trim();
+            const flatNo = document.getElementById('regFlatNo').value.trim().toUpperCase();
+            const age = parseInt(document.getElementById('regAge').value);
+            const gender = document.getElementById('regGender').value;
+            
+            const result = await sendData('register', {
+                name: name,
+                flatNo: flatNo,
+                age: age,
+                gender: gender
+            });
+            
+            if (result.success) {
+                showStatus('registerStatus', result.message + ' 🎉', 'success');
+                document.getElementById('registerForm').reset();
+                
+                setTimeout(async () => {
+                    await loadData();
+                    showView('submit');
+                    document.getElementById('registerStatus').textContent = '';
+                }, 2000);
+            } else {
+                showStatus('registerStatus', result.message, 'error');
+            }
+        }
+
+        // Handle submit steps
+        async function handleSubmitSteps(event) {
+            event.preventDefault();
+            
+            const selectedDate = document.getElementById('submitDate').value;
+            const selectedValue = document.getElementById('participantSelect').value;
+            const steps = parseInt(document.getElementById('submitSteps').value);
+            
+            // Validate date range
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const submitDate = new Date(selectedDate);
+            const minDate = new Date('2026-01-01');
+            
+            if (submitDate > today) {
+                showStatus('submitStatus', '❌ Cannot submit steps for future dates!', 'error');
+                return;
+            }
+            
+            if (submitDate < minDate) {
+                showStatus('submitStatus', '❌ Date must be January 1, 2026 or later!', 'error');
+                return;
+            }
+            
+            if (!selectedValue) {
+                showStatus('submitStatus', 'Please select your name from the dropdown', 'error');
+                return;
+            }
+            
+            // Parse the selected value (format: "uniqueKey|Name|FlatNo")
+            const [uniqueKey, name, flatNo] = selectedValue.split('|');
+            
+            const result = await sendData('submitSteps', {
+                date: selectedDate,
+                name: name,
+                flatNo: flatNo,
+                steps: steps
+            });
+            
+            if (result.success) {
+                showStatus('submitStatus', result.message + ' 🎉', 'success');
+                document.getElementById('submitForm').reset();
+                setDefaultDate(); // Reset date to today
+                
+                setTimeout(async () => {
+                    await loadData();
+                    document.getElementById('submitStatus').textContent = '';
+                }, 2000);
+            } else {
+                showStatus('submitStatus', result.message, 'error');
+            }
+        }
+
+        // Show status message
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `text-sm mt-4 text-center ${type === 'success' ? 'text-green-600' : 'text-red-600'}`;
+        }
+
+        // Get age group
+        function getAgeGroup(age) {
+            if (age < 18) return 'Under 18';
+            if (age <= 30) return '18-30';
+            if (age <= 45) return '31-45';
+            if (age <= 60) return '46-60';
+            return 'Over 60';
+        }
+
+        // Set default date to today
+        function setDefaultDate() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+            
+            const dateInput = document.getElementById('submitDate');
+            if (dateInput) {
+                dateInput.value = todayStr;
+                dateInput.max = todayStr; // Prevent selecting future dates
+                dateInput.min = '2026-01-01'; // Minimum date is Jan 1, 2026
+            }
+        }
+
+        // Load all data
+        async function loadData() {
+            const data = await fetchData();
+            if (data) {
+                updateStats(data);
+            }
+        }
+
+        // Update stats
+        function updateStats(data) {
+            const totalSteps = data.steps.reduce((sum, entry) => sum + entry.steps, 0);
+            
+            document.getElementById('totalSteps').textContent = totalSteps.toLocaleString();
+            document.getElementById('totalParticipants').textContent = data.profiles.length;
+            
+            // Update goal progress
+            const percentage = Math.min(100, (totalSteps / GOAL_STEPS) * 100);
+            const remaining = Math.max(0, GOAL_STEPS - totalSteps);
+            
+            document.getElementById('goalPercentage').textContent = percentage.toFixed(1) + '%';
+            document.getElementById('goalProgress').style.width = percentage + '%';
+            document.getElementById('goalCurrent').textContent = totalSteps.toLocaleString() + ' steps';
+            document.getElementById('goalRemaining').textContent = remaining.toLocaleString() + ' to go!';
+            
+            // Add celebration if goal reached
+            if (totalSteps >= GOAL_STEPS) {
+                document.getElementById('goalRemaining').textContent = '🎉 Goal Achieved! 🎉';
+                document.getElementById('goalRemaining').className = 'text-green-600 font-bold';
+            }
+            
+            // Update participant dropdown
+            populateParticipantDropdown(data.profiles);
+        }
+
+        // Populate dropdown with registered participants
+        function populateParticipantDropdown(profiles) {
+            const select = document.getElementById('participantSelect');
+            
+            // Clear existing options except the first placeholder
+            select.innerHTML = '<option value="">-- Select from registered participants --</option>';
+            
+            // Sort profiles alphabetically by name
+            const sortedProfiles = [...profiles].sort((a, b) => a.name.localeCompare(b.name));
+            
+            // Add option for each registered participant
+            sortedProfiles.forEach(profile => {
+                const option = document.createElement('option');
+                const uniqueKey = profile.uniqueKey || createUniqueKey(profile.name, profile.flatNo);
+                
+                // Value format: "uniqueKey|Name|FlatNo"
+                option.value = `${uniqueKey}|${profile.name}|${profile.flatNo}`;
+                
+                // Display format: "Name (Flat No)"
+                option.textContent = `${profile.name} (${profile.flatNo})`;
+                
+                select.appendChild(option);
+            });
+        }
+
+        // Load registered list
+        function loadRegisteredList() {
+            if (!cachedData) return;
+            
+            const profiles = cachedData.profiles;
+            
+            const listHtml = profiles.length > 0
+                ? profiles.map(profile => `
+                    <div class="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="font-semibold text-gray-800 text-sm sm:text-base">${profile.name}</p>
+                            <p class="text-xs sm:text-sm text-gray-600">Flat ${profile.flatNo} • ${profile.age} years • ${profile.gender}</p>
+                        </div>
+                    </div>
+                `).join('')
+                : '<p class="text-gray-500 text-center py-4 text-sm sm:text-base">No participants registered yet</p>';
+            
+            document.getElementById('registeredList').innerHTML = listHtml;
+        }
+
+        // Load dashboard
+        function loadDashboard() {
+            if (!cachedData) return;
+            
+            const profiles = cachedData.profiles;
+            const steps = cachedData.steps;
+
+            let byAge = { 'Under 18': 0, '18-30': 0, '31-45': 0, '46-60': 0, 'Over 60': 0 };
+            let byGender = { 'Male': 0, 'Female': 0, 'Other': 0 };
+            let participantSteps = {}; // Track by unique key (name + flat)
+            let dailySteps = {}; // Track daily aggregate
+
+            // Create a map of profiles by unique key
+            const profileMap = {};
+            profiles.forEach(profile => {
+                const uniqueKey = profile.uniqueKey || createUniqueKey(profile.name, profile.flatNo);
+                profileMap[uniqueKey] = profile;
+            });
+
+            // Calculate stats
+            steps.forEach(entry => {
+                const uniqueKey = entry.uniqueKey || createUniqueKey(entry.name, entry.flatNo);
+                const profile = profileMap[uniqueKey];
+                
+                if (profile) {
+                    participantSteps[uniqueKey] = (participantSteps[uniqueKey] || 0) + entry.steps;
+
+                    const ageGroup = getAgeGroup(profile.age);
+                    byAge[ageGroup] += entry.steps;
+                    byGender[profile.gender] += entry.steps;
+                    
+                    // Aggregate by date
+                    const dateKey = entry.date instanceof Date 
+                        ? entry.date.toISOString().split('T')[0]
+                        : (typeof entry.date === 'string' ? entry.date.split('T')[0] : entry.date);
+                    dailySteps[dateKey] = (dailySteps[dateKey] || 0) + entry.steps;
+                }
+            });
+
+            // Create leaderboard
+            const leaderboard = Object.entries(participantSteps)
+                .map(([uniqueKey, steps]) => ({
+                    uniqueKey: uniqueKey,
+                    flatNo: profileMap[uniqueKey]?.flatNo || 'Unknown',
+                    name: profileMap[uniqueKey]?.name || 'Unknown',
+                    steps: steps
+                }))
+                .sort((a, b) => b.steps - a.steps)
+                .slice(0, 10);
+
+            const leaderboardHtml = leaderboard.length > 0
+                ? leaderboard.map((entry, idx) => `
+                    <div class="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center gap-2 sm:gap-4">
+                            <span class="text-lg sm:text-2xl font-bold text-gray-400 w-6 sm:w-8">#{idx + 1}</span>
+                            <div>
+                                <p class="font-semibold text-gray-800 text-sm sm:text-base">${entry.name}</p>
+                                <p class="text-xs sm:text-sm text-gray-600">Flat ${entry.flatNo}</p>
+                            </div>
+                        </div>
+                        <p class="text-lg sm:text-2xl font-bold text-blue-600">${entry.steps.toLocaleString()}</p>
+                    </div>
+                `).join('')
+                : '<p class="text-gray-500 text-center py-4 text-sm sm:text-base">No submissions yet</p>';
+
+            document.getElementById('leaderboard').innerHTML = leaderboardHtml;
+
+            // Update charts
+            updateCharts(byAge, byGender, dailySteps);
+        }
+
+        // Update charts
+        function updateCharts(byAge, byGender, dailySteps) {
+            const ageData = Object.entries(byAge).filter(([_, steps]) => steps > 0);
+            const genderData = Object.entries(byGender).filter(([_, steps]) => steps > 0);
+
+            // Daily steps chart
+            const dailyCtx = document.getElementById('dailyStepsChart').getContext('2d');
+            if (dailyStepsChart) dailyStepsChart.destroy();
+            
+            if (dailySteps && Object.keys(dailySteps).length > 0) {
+                // Sort by date
+                const sortedDaily = Object.entries(dailySteps).sort((a, b) => {
+                    return new Date(a[0]) - new Date(b[0]);
+                });
+                
+                // Get last 30 days or all available data
+                const recentDaily = sortedDaily.slice(-30);
+                
+                dailyStepsChart = new Chart(dailyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: recentDaily.map(([date]) => {
+                            const d = new Date(date);
+                            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        }),
+                        datasets: [{
+                            label: 'Daily Steps',
+                            data: recentDaily.map(([_, steps]) => steps),
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderColor: '#3b82f6',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Steps: ' + context.parsed.y.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toLocaleString();
+                                    }
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Age chart
+            const ageCtx = document.getElementById('ageChart').getContext('2d');
+            if (ageChart) ageChart.destroy();
+            
+            if (ageData.length > 0) {
+                ageChart = new Chart(ageCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ageData.map(([age]) => age),
+                        datasets: [{
+                            label: 'Steps',
+                            data: ageData.map(([_, steps]) => steps),
+                            backgroundColor: '#3b82f6'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Gender chart
+            const genderCtx = document.getElementById('genderChart').getContext('2d');
+            if (genderChart) genderChart.destroy();
+            
+            if (genderData.length > 0) {
+                genderChart = new Chart(genderCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: genderData.map(([gender]) => gender),
+                        datasets: [{
+                            data: genderData.map(([_, steps]) => steps),
+                            backgroundColor: ['#3b82f6', '#ef4444', '#10b981']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Toggle dashboard
+        async function toggleDashboard() {
+            const dashboard = document.getElementById('dashboard');
+            const button = document.getElementById('toggleBtn');
+            
+            if (dashboard.classList.contains('hidden')) {
+                dashboard.classList.remove('hidden');
+                button.textContent = '▲ Hide Community Dashboard';
+                await loadData();
+                loadDashboard();
+            } else {
+                dashboard.classList.add('hidden');
+                button.textContent = '▼ View Community Dashboard';
+            }
+        }
+
+        // Initialize on page load
+        window.onload = async function() {
+            // Check if SCRIPT_URL is set
+            if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                document.getElementById('setupNotice').classList.remove('hidden');
+            } else {
+                document.getElementById('setupNotice').classList.add('hidden');
+            }
+            
+            setDefaultDate(); // Set date input to today
+            await loadData();
+            showView('submit');
+        };
+    </script>
+</body>
+</html>
