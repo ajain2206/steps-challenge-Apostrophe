@@ -230,16 +230,114 @@
                     </div>
                 </div>
 
-                <!-- Leaderboard -->
+                <!-- Participant Leaderboard with Tabs -->
                 <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
-                    <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">🏆 Leaderboard</h2>
-                    <div id="leaderboard" class="space-y-2">
-                        <p class="text-gray-500 text-center py-4 text-sm sm:text-base">Loading...</p>
+                    <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">🏆 Participant Leaderboard</h2>
+                    
+                    <!-- Tabs -->
+                    <div class="flex border-b border-gray-200 mb-4">
+                        <button
+                            id="cumulativeTab"
+                            onclick="switchLeaderboardTab('cumulative')"
+                            class="px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 border-blue-600 text-blue-600"
+                        >
+                            Cumulative
+                        </button>
+                        <button
+                            id="daywiseTab"
+                            onclick="switchLeaderboardTab('daywise')"
+                            class="px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 border-transparent text-gray-600 hover:text-gray-800"
+                        >
+                            Day-wise
+                        </button>
+                    </div>
+
+                    <!-- Cumulative View -->
+                    <div id="cumulativeView">
+                        <!-- Sort and Filter Options -->
+                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4">
+                            <div class="flex-1">
+                                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Sort by:</label>
+                                <select
+                                    id="sortBy"
+                                    onchange="loadLeaderboard()"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="steps">Total Steps (High to Low)</option>
+                                    <option value="name">Name (A-Z)</option>
+                                    <option value="flat">Flat Number</option>
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Search:</label>
+                                <input
+                                    type="text"
+                                    id="searchParticipant"
+                                    onkeyup="loadLeaderboard()"
+                                    placeholder="Search by name or flat..."
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- All Participants List -->
+                        <div id="allParticipants" class="space-y-2 max-h-96 overflow-y-auto">
+                            <p class="text-gray-500 text-center py-4 text-sm sm:text-base">Loading...</p>
+                        </div>
+                        
+                        <p id="participantCount" class="text-xs sm:text-sm text-gray-600 mt-3 text-center"></p>
+                    </div>
+
+                    <!-- Day-wise View -->
+                    <div id="daywiseView" class="hidden">
+                        <!-- Participant Selector -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Participant:</label>
+                            <select
+                                id="daywiseParticipantSelect"
+                                onchange="loadDaywiseData()"
+                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">-- Select a participant --</option>
+                            </select>
+                        </div>
+
+                        <!-- Day-wise Data Display -->
+                        <div id="daywiseData">
+                            <p class="text-gray-500 text-center py-8 text-sm sm:text-base">Select a participant to see their daily breakdown</p>
+                        </div>
+
+                        <!-- Navigation -->
+                        <div class="flex justify-between mt-4">
+                            <button
+                                id="prevParticipant"
+                                onclick="navigateParticipant(-1)"
+                                class="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled
+                            >
+                                ⬅️ Previous
+                            </button>
+                            <button
+                                id="nextParticipant"
+                                onclick="navigateParticipant(1)"
+                                class="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled
+                            >
+                                Next ➡️
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Charts -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                        <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Steps by Building</h2>
+                        <div class="h-64">
+                            <canvas id="buildingChart"></canvas>
+                        </div>
+                    </div>
+                    
                     <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
                         <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Steps by Age Group</h2>
                         <div class="h-64">
@@ -264,6 +362,7 @@
 
         let ageChart = null;
         let genderChart = null;
+        let buildingChart = null;
         let dailyStepsChart = null;
         let cachedData = null;
 
@@ -524,6 +623,227 @@
             });
         }
 
+        // Load leaderboard (all participants with sort and filter)
+        function loadLeaderboard() {
+            if (!window.dashboardData) return;
+            
+            const { participantSteps, profileMap } = window.dashboardData;
+            
+            // Get all participants
+            let allParticipants = Object.entries(participantSteps)
+                .map(([uniqueKey, steps]) => ({
+                    uniqueKey: uniqueKey,
+                    flatNo: profileMap[uniqueKey]?.flatNo || 'Unknown',
+                    name: profileMap[uniqueKey]?.name || 'Unknown',
+                    steps: steps
+                }));
+            
+            // Apply search filter
+            const searchTerm = document.getElementById('searchParticipant')?.value.toLowerCase() || '';
+            if (searchTerm) {
+                allParticipants = allParticipants.filter(p => 
+                    p.name.toLowerCase().includes(searchTerm) || 
+                    p.flatNo.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Apply sorting
+            const sortBy = document.getElementById('sortBy')?.value || 'steps';
+            if (sortBy === 'steps') {
+                allParticipants.sort((a, b) => b.steps - a.steps);
+            } else if (sortBy === 'name') {
+                allParticipants.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortBy === 'flat') {
+                allParticipants.sort((a, b) => a.flatNo.localeCompare(b.flatNo));
+            }
+            
+            // Generate HTML
+            const leaderboardHtml = allParticipants.length > 0
+                ? allParticipants.map((entry, idx) => `
+                    <div class="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div class="flex items-center gap-2 sm:gap-4">
+                            <span class="text-sm sm:text-lg font-bold text-gray-400 w-5 sm:w-8">#${idx + 1}</span>
+                            <div>
+                                <p class="font-semibold text-gray-800 text-sm sm:text-base">${entry.name}</p>
+                                <p class="text-xs sm:text-sm text-gray-600">Flat ${entry.flatNo}</p>
+                            </div>
+                        </div>
+                        <p class="text-base sm:text-xl font-bold text-blue-600">${entry.steps.toLocaleString()}</p>
+                    </div>
+                `).join('')
+                : '<p class="text-gray-500 text-center py-4 text-sm sm:text-base">No participants found</p>';
+            
+            document.getElementById('allParticipants').innerHTML = leaderboardHtml;
+            document.getElementById('participantCount').textContent = 
+                `Showing ${allParticipants.length} participant${allParticipants.length !== 1 ? 's' : ''}`;
+            
+            // Populate day-wise dropdown
+            populateDaywiseDropdown(allParticipants);
+        }
+
+        // Switch between cumulative and day-wise tabs
+        function switchLeaderboardTab(tab) {
+            const cumulativeTab = document.getElementById('cumulativeTab');
+            const daywiseTab = document.getElementById('daywiseTab');
+            const cumulativeView = document.getElementById('cumulativeView');
+            const daywiseView = document.getElementById('daywiseView');
+            
+            if (tab === 'cumulative') {
+                cumulativeTab.className = 'px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 border-blue-600 text-blue-600';
+                daywiseTab.className = 'px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 border-transparent text-gray-600 hover:text-gray-800';
+                cumulativeView.classList.remove('hidden');
+                daywiseView.classList.add('hidden');
+            } else {
+                cumulativeTab.className = 'px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 border-transparent text-gray-600 hover:text-gray-800';
+                daywiseTab.className = 'px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 border-blue-600 text-blue-600';
+                cumulativeView.classList.add('hidden');
+                daywiseView.classList.remove('hidden');
+            }
+        }
+
+        // Populate day-wise participant dropdown
+        function populateDaywiseDropdown(allParticipants) {
+            const select = document.getElementById('daywiseParticipantSelect');
+            if (!select) return;
+            
+            // Sort by name for dropdown
+            const sorted = [...allParticipants].sort((a, b) => a.name.localeCompare(b.name));
+            
+            select.innerHTML = '<option value="">-- Select a participant --</option>' +
+                sorted.map(p => 
+                    `<option value="${p.uniqueKey}">${p.name} (${p.flatNo})</option>`
+                ).join('');
+        }
+
+        // Load day-wise data for selected participant
+        function loadDaywiseData() {
+            const select = document.getElementById('daywiseParticipantSelect');
+            const uniqueKey = select.value;
+            
+            if (!uniqueKey || !window.dashboardData) {
+                document.getElementById('daywiseData').innerHTML = 
+                    '<p class="text-gray-500 text-center py-8 text-sm sm:text-base">Select a participant to see their daily breakdown</p>';
+                document.getElementById('prevParticipant').disabled = true;
+                document.getElementById('nextParticipant').disabled = true;
+                return;
+            }
+            
+            const { profileMap, steps } = window.dashboardData;
+            const profile = profileMap[uniqueKey];
+            
+            // Get all steps for this participant
+            const participantSteps = steps.filter(entry => {
+                const entryKey = entry.uniqueKey || createUniqueKey(entry.name, entry.flatNo);
+                return entryKey === uniqueKey;
+            });
+            
+            if (participantSteps.length === 0) {
+                document.getElementById('daywiseData').innerHTML = 
+                    '<p class="text-gray-500 text-center py-8 text-sm sm:text-base">No steps recorded yet</p>';
+                return;
+            }
+            
+            // Sort by date
+            participantSteps.sort((a, b) => {
+                const dateA = typeof a.date === 'string' ? a.date : a.date.toISOString();
+                const dateB = typeof b.date === 'string' ? b.date : b.date.toISOString();
+                return dateA.localeCompare(dateB);
+            });
+            
+            // Calculate total and average
+            const totalSteps = participantSteps.reduce((sum, entry) => sum + entry.steps, 0);
+            const avgSteps = Math.round(totalSteps / participantSteps.length);
+            
+            // Generate table HTML
+            const tableHtml = `
+                <div class="mb-4">
+                    <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-2">
+                        📅 Daily Steps for ${profile.name}
+                    </h3>
+                    <p class="text-xs sm:text-sm text-gray-600">Flat ${profile.flatNo}</p>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100 border-b-2 border-gray-200">
+                            <tr>
+                                <th class="px-2 sm:px-4 py-2 text-left font-semibold text-gray-700">Date</th>
+                                <th class="px-2 sm:px-4 py-2 text-right font-semibold text-gray-700">Steps</th>
+                                <th class="px-2 sm:px-4 py-2 text-left font-semibold text-gray-700">vs Average</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            ${participantSteps.map(entry => {
+                                const dateStr = typeof entry.date === 'string' ? entry.date : entry.date.toISOString().split('T')[0];
+                                const [year, month, day] = dateStr.split('-');
+                                const d = new Date(year, month - 1, day);
+                                const formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                                
+                                const percentage = Math.round((entry.steps / avgSteps) * 100);
+                                const barWidth = Math.min(percentage, 100);
+                                const barColor = percentage >= 100 ? 'bg-green-500' : percentage >= 75 ? 'bg-blue-500' : 'bg-yellow-500';
+                                
+                                return `
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-2 sm:px-4 py-2 text-gray-800">${formattedDate}</td>
+                                        <td class="px-2 sm:px-4 py-2 text-right font-semibold text-gray-800">${entry.steps.toLocaleString()}</td>
+                                        <td class="px-2 sm:px-4 py-2">
+                                            <div class="flex items-center gap-2">
+                                                <div class="flex-1 bg-gray-200 rounded-full h-2 max-w-[100px]">
+                                                    <div class="${barColor} h-2 rounded-full" style="width: ${barWidth}%"></div>
+                                                </div>
+                                                <span class="text-xs text-gray-600">${percentage}%</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                        <tfoot class="bg-gray-50 border-t-2 border-gray-200">
+                            <tr>
+                                <td class="px-2 sm:px-4 py-3 font-bold text-gray-800">Total</td>
+                                <td class="px-2 sm:px-4 py-3 text-right font-bold text-blue-600">${totalSteps.toLocaleString()}</td>
+                                <td class="px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-600">Avg: ${avgSteps.toLocaleString()}/day</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+            
+            document.getElementById('daywiseData').innerHTML = tableHtml;
+            
+            // Enable/disable navigation buttons
+            updateNavigationButtons();
+        }
+
+        // Navigate to previous/next participant
+        function navigateParticipant(direction) {
+            const select = document.getElementById('daywiseParticipantSelect');
+            const currentIndex = select.selectedIndex;
+            const newIndex = currentIndex + direction;
+            
+            if (newIndex >= 0 && newIndex < select.options.length) {
+                select.selectedIndex = newIndex;
+                loadDaywiseData();
+            }
+        }
+
+        // Update navigation button states
+        function updateNavigationButtons() {
+            const select = document.getElementById('daywiseParticipantSelect');
+            const prevBtn = document.getElementById('prevParticipant');
+            const nextBtn = document.getElementById('nextParticipant');
+            
+            if (!select.value) {
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+                return;
+            }
+            
+            prevBtn.disabled = select.selectedIndex <= 1; // 0 is "Select a participant"
+            nextBtn.disabled = select.selectedIndex >= select.options.length - 1;
+        }
+
         // Load registered list
         function loadRegisteredList() {
             if (!cachedData) return;
@@ -553,6 +873,7 @@
 
             let byAge = { 'Under 18': 0, '18-30': 0, '31-45': 0, '46-60': 0, 'Over 60': 0 };
             let byGender = { 'Male': 0, 'Female': 0, 'Other': 0 };
+            let byBuilding = {}; // Track by building
             let participantSteps = {}; // Track by unique key (name + flat)
             let dailySteps = {}; // Track daily aggregate
 
@@ -575,50 +896,48 @@
                     byAge[ageGroup] += entry.steps;
                     byGender[profile.gender] += entry.steps;
                     
+                    // Extract building from flat number (first character)
+                    const building = profile.flatNo.charAt(0).toUpperCase();
+                    byBuilding[building] = (byBuilding[building] || 0) + entry.steps;
+                    
                     // Aggregate by date
                     const dateKey = entry.date instanceof Date 
                         ? entry.date.toISOString().split('T')[0]
                         : (typeof entry.date === 'string' ? entry.date.split('T')[0] : entry.date);
+                    
+                    // DEBUG: Log first date processing
+                    if (Object.keys(dailySteps).length === 0) {
+                        console.log('DEBUG LoadDashboard - First entry date:', entry.date);
+                        console.log('DEBUG LoadDashboard - Date type:', typeof entry.date);
+                        console.log('DEBUG LoadDashboard - Date key:', dateKey);
+                    }
+                    
                     dailySteps[dateKey] = (dailySteps[dateKey] || 0) + entry.steps;
                 }
             });
 
-            // Create leaderboard
-            const leaderboard = Object.entries(participantSteps)
-                .map(([uniqueKey, steps]) => ({
-                    uniqueKey: uniqueKey,
-                    flatNo: profileMap[uniqueKey]?.flatNo || 'Unknown',
-                    name: profileMap[uniqueKey]?.name || 'Unknown',
-                    steps: steps
-                }))
-                .sort((a, b) => b.steps - a.steps)
-                .slice(0, 10);
+            // Store for use in leaderboard
+            window.dashboardData = {
+                participantSteps,
+                profileMap,
+                steps
+            };
 
-            const leaderboardHtml = leaderboard.length > 0
-                ? leaderboard.map((entry, idx) => `
-                    <div class="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
-                        <div class="flex items-center gap-2 sm:gap-4">
-                            <span class="text-lg sm:text-2xl font-bold text-gray-400 w-6 sm:w-8">#${idx + 1}</span>
-                            <div>
-                                <p class="font-semibold text-gray-800 text-sm sm:text-base">${entry.name}</p>
-                                <p class="text-xs sm:text-sm text-gray-600">Flat ${entry.flatNo}</p>
-                            </div>
-                        </div>
-                        <p class="text-lg sm:text-2xl font-bold text-blue-600">${entry.steps.toLocaleString()}</p>
-                    </div>
-                `).join('')
-                : '<p class="text-gray-500 text-center py-4 text-sm sm:text-base">No submissions yet</p>';
-
-            document.getElementById('leaderboard').innerHTML = leaderboardHtml;
+            // Load leaderboard (all participants)
+            loadLeaderboard();
 
             // Update charts
-            updateCharts(byAge, byGender, dailySteps);
+            updateCharts(byAge, byGender, byBuilding, dailySteps);
         }
 
         // Update charts
-        function updateCharts(byAge, byGender, dailySteps) {
+        function updateCharts(byAge, byGender, byBuilding, dailySteps) {
             const ageData = Object.entries(byAge).filter(([_, steps]) => steps > 0);
             const genderData = Object.entries(byGender).filter(([_, steps]) => steps > 0);
+            const buildingData = Object.entries(byBuilding).filter(([_, steps]) => steps > 0);
+
+            // Sort building data alphabetically for consistent display
+            buildingData.sort((a, b) => a[0].localeCompare(b[0]));
 
             // Daily steps chart
             const dailyCtx = document.getElementById('dailyStepsChart').getContext('2d');
@@ -639,8 +958,18 @@
                         labels: recentDaily.map(([date]) => {
                             // Parse date as local date to avoid timezone issues
                             const [year, month, day] = date.split('-').map(Number);
-                            const d = new Date(year, month - 1, day); // month is 0-indexed
-                            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            const d = new Date(year, month - 1, day);
+                            const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            
+                            // DEBUG: Log first date to console
+                            if (date === recentDaily[0][0]) {
+                                console.log('DEBUG Chart - Raw date:', date);
+                                console.log('DEBUG Chart - Parsed:', year, month, day);
+                                console.log('DEBUG Chart - Date object:', d);
+                                console.log('DEBUG Chart - Label:', label);
+                            }
+                            
+                            return label;
                         }),
                         datasets: [{
                             label: 'Daily Steps',
@@ -680,6 +1009,62 @@
                                 ticks: {
                                     maxRotation: 45,
                                     minRotation: 45
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Building chart
+            const buildingCtx = document.getElementById('buildingChart').getContext('2d');
+            if (buildingChart) buildingChart.destroy();
+            
+            if (buildingData.length > 0) {
+                // Generate distinct colors for each building
+                const buildingColors = [
+                    '#3b82f6', // Blue
+                    '#ef4444', // Red
+                    '#10b981', // Green
+                    '#f59e0b', // Amber
+                    '#8b5cf6', // Violet
+                    '#ec4899', // Pink
+                    '#14b8a6', // Teal
+                    '#f97316', // Orange
+                ];
+                
+                buildingChart = new Chart(buildingCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: buildingData.map(([building]) => `Building ${building}`),
+                        datasets: [{
+                            label: 'Steps',
+                            data: buildingData.map(([_, steps]) => steps),
+                            backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length])
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Steps: ' + context.parsed.y.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toLocaleString();
+                                    }
                                 }
                             }
                         }
