@@ -774,10 +774,32 @@
                         </thead>
                         <tbody class="divide-y divide-gray-200">
                             ${participantSteps.map(entry => {
-                                const dateStr = typeof entry.date === 'string' ? entry.date : entry.date.toISOString().split('T')[0];
-                                const [year, month, day] = dateStr.split('-');
-                                const d = new Date(year, month - 1, day);
-                                const formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                                // Parse date string properly
+                                let formattedDate = '';
+                                try {
+                                    const dateStr = typeof entry.date === 'string' ? entry.date : entry.date.toISOString().split('T')[0];
+                                    const parts = dateStr.split('-');
+                                    
+                                    if (parts.length === 3) {
+                                        const year = parseInt(parts[0], 10);
+                                        const month = parseInt(parts[1], 10);
+                                        const day = parseInt(parts[2], 10);
+                                        
+                                        // Create date object with explicit numbers
+                                        const d = new Date(year, month - 1, day);
+                                        
+                                        // Verify the date is valid
+                                        if (!isNaN(d.getTime())) {
+                                            formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                                        } else {
+                                            formattedDate = dateStr; // Fallback to original string
+                                        }
+                                    } else {
+                                        formattedDate = dateStr; // Fallback to original string
+                                    }
+                                } catch (e) {
+                                    formattedDate = 'Date Error';
+                                }
                                 
                                 const percentage = Math.round((entry.steps / avgSteps) * 100);
                                 const barWidth = Math.min(percentage, 100);
