@@ -160,6 +160,15 @@
         <div id="submitView">
             <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 mb-4 sm:mb-6">
                 <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">Submit Your Steps</h2>
+                
+                <!-- Important Notice -->
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 mb-4 rounded">
+                    <p class="text-sm sm:text-base text-blue-800">
+                        <strong>💡 Important:</strong> Submit only your <strong>FINAL step count</strong> for the day. 
+                        You can only submit <strong>once per day</strong>.
+                    </p>
+                </div>
+                
                 <form id="submitForm" class="space-y-3 sm:space-y-4" onsubmit="handleSubmitSteps(event)">
                     <div class="grid grid-cols-1 gap-3 sm:gap-4">
                         <div>
@@ -171,6 +180,7 @@
                                 id="submitDate"
                                 class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
+                                onchange="checkExistingEntry()"
                             />
                             <p class="text-xs text-gray-500 mt-1">💡 Select from Jan 1, 2026 onwards</p>
                         </div>
@@ -182,11 +192,31 @@
                                 id="participantSelect"
                                 class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
+                                onchange="checkExistingEntry()"
                             >
                                 <option value="">-- Select from registered participants --</option>
                             </select>
                             <p class="text-xs text-gray-500 mt-1">💡 Don't see your name? <a href="#" onclick="showView('register'); return false;" class="text-blue-600 hover:underline font-medium">Register here</a></p>
                         </div>
+                        
+                        <!-- Existing Entry Warning (Hidden by default) -->
+                        <div id="existingEntryWarning" class="hidden">
+                            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 sm:p-4 rounded">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <span class="text-2xl">⚠️</span>
+                                    </div>
+                                    <div class="ml-3 flex-1">
+                                        <h3 class="text-sm sm:text-base font-bold text-yellow-800 mb-2">ALREADY SUBMITTED</h3>
+                                        <div id="existingEntryDetails" class="text-xs sm:text-sm text-yellow-700 mb-2"></div>
+                                        <p class="text-xs sm:text-sm text-yellow-800">
+                                            ✅ This entry is locked. Please select a different date or verify you selected the correct name.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Steps *
@@ -203,6 +233,7 @@
                     </div>
                     <button
                         type="submit"
+                        id="submitButton"
                         class="w-full bg-blue-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg"
                     >
                         Submit Steps
@@ -470,6 +501,75 @@
                 }, 2000);
             } else {
                 showStatus('registerStatus', result.message, 'error');
+            }
+        }
+
+        // Check if user already has entry for selected date
+        function checkExistingEntry() {
+            const dateInput = document.getElementById('submitDate');
+            const participantSelect = document.getElementById('participantSelect');
+            const stepsInput = document.getElementById('submitSteps');
+            const submitButton = document.getElementById('submitButton');
+            const warningDiv = document.getElementById('existingEntryWarning');
+            const detailsDiv = document.getElementById('existingEntryDetails');
+            
+            const selectedDate = dateInput.value;
+            const selectedValue = participantSelect.value;
+            
+            // Reset if either is not selected
+            if (!selectedDate || !selectedValue) {
+                warningDiv.classList.add('hidden');
+                stepsInput.disabled = false;
+                stepsInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                submitButton.disabled = false;
+                submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                return;
+            }
+            
+            const [uniqueKey, name, flatNo] = selectedValue.split('|');
+            
+            // Check if this person has entry for this date
+            if (!cachedData || !cachedData.steps) return;
+            
+            const existing = cachedData.steps.find(entry => {
+                const entryKey = entry.uniqueKey || createUniqueKey(entry.name, entry.flatNo);
+                const entryDate = typeof entry.date === 'string' ? entry.date.split('T')[0] : entry.date.toISOString().split('T')[0];
+                return entryKey === uniqueKey && entryDate === selectedDate;
+            });
+            
+            if (existing) {
+                // Show warning and disable form
+                const [year, month, day] = selectedDate.split('-');
+                const d = new Date(year, month - 1, day);
+                const formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                detailsDiv.innerHTML = `
+                    <p class="font-semibold">${name} already submitted ${existing.steps.toLocaleString()} steps for ${formattedDate}</p>
+                `;
+                
+                warningDiv.classList.remove('hidden');
+                
+                // Disable steps input and submit button
+                stepsInput.disabled = true;
+                stepsInput.value = '';
+                stepsInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+                
+                submitButton.disabled = true;
+                submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+                submitButton.textContent = '🔒 Already Submitted';
+            } else {
+                // Hide warning and enable form
+                warningDiv.classList.add('hidden');
+                
+                stepsInput.disabled = false;
+                stepsInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                
+                submitButton.disabled = false;
+                submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                submitButton.textContent = 'Submit Steps';
             }
         }
 
