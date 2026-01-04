@@ -68,11 +68,77 @@
             </div>
         </div>
 
+        <!-- Fun Stats Section -->
+        <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
+            <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">🎯 We've Walked:</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+                <!-- Distance -->
+                <div class="bg-blue-50 rounded-lg p-3 sm:p-4 border border-blue-100">
+                    <div class="text-xl sm:text-2xl mb-1">🌍</div>
+                    <div id="statDistance" class="text-lg sm:text-2xl font-bold text-blue-600 mb-1">0 km</div>
+                    <div class="text-xs sm:text-sm text-gray-600">Distance Covered</div>
+                </div>
+                
+                <!-- Society Loops -->
+                <div class="bg-purple-50 rounded-lg p-3 sm:p-4 border border-purple-100">
+                    <div class="text-xl sm:text-2xl mb-1">🏘️</div>
+                    <div id="statLoops" class="text-lg sm:text-2xl font-bold text-purple-600 mb-1">0</div>
+                    <div class="text-xs sm:text-sm text-gray-600">Loops of Apostrophe</div>
+                </div>
+                
+                <!-- India Journey -->
+                <div class="bg-orange-50 rounded-lg p-3 sm:p-4 border border-orange-100">
+                    <div class="text-xl sm:text-2xl mb-1">🇮🇳</div>
+                    <div id="statIndia" class="text-lg sm:text-2xl font-bold text-orange-600 mb-1">0%</div>
+                    <div class="text-xs sm:text-sm text-gray-600">Mumbai → Delhi</div>
+                </div>
+                
+                <!-- Calories -->
+                <div class="bg-red-50 rounded-lg p-3 sm:p-4 border border-red-100">
+                    <div class="text-xl sm:text-2xl mb-1">🔥</div>
+                    <div id="statCalories" class="text-lg sm:text-2xl font-bold text-red-600 mb-1">0</div>
+                    <div class="text-xs sm:text-sm text-gray-600">Calories Burned</div>
+                </div>
+                
+                <!-- Trees Planted -->
+                <div class="bg-green-50 rounded-lg p-3 sm:p-4 border border-green-100">
+                    <div class="text-xl sm:text-2xl mb-1">🌳</div>
+                    <div id="statTrees" class="text-lg sm:text-2xl font-bold text-green-600 mb-1">0</div>
+                    <div class="text-xs sm:text-sm text-gray-600">Trees Equivalent</div>
+                </div>
+                
+                <!-- To Space -->
+                <div class="bg-indigo-50 rounded-lg p-3 sm:p-4 border border-indigo-100">
+                    <div class="text-xl sm:text-2xl mb-1">🚀</div>
+                    <div id="statSpace" class="text-lg sm:text-2xl font-bold text-indigo-600 mb-1">0×</div>
+                    <div class="text-xs sm:text-sm text-gray-600">To Space (100km)</div>
+                </div>
+            </div>
+        </div>
+
         <!-- Loading Indicator -->
         <div id="loadingIndicator" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div class="bg-white rounded-lg p-4 sm:p-6 flex items-center gap-3 mx-4">
                 <div class="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600"></div>
                 <span class="text-gray-700 text-sm sm:text-base">Processing...</span>
+            </div>
+        </div>
+
+        <!-- Milestone Celebration Modal -->
+        <div id="milestoneModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-2xl p-6 sm:p-8 max-w-md mx-4 text-center animate-bounce">
+                <div id="milestoneIcon" class="text-6xl sm:text-8xl mb-4">🎉</div>
+                <h2 id="milestoneTitle" class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Milestone Reached!</h2>
+                <p id="milestoneMessage" class="text-base sm:text-lg text-gray-600 mb-4"></p>
+                <div id="milestoneStats" class="bg-blue-50 rounded-lg p-4 mb-6 text-left">
+                    <!-- Stats will be inserted here -->
+                </div>
+                <button
+                    onclick="closeMilestone()"
+                    class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-6 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all font-semibold text-lg"
+                >
+                    🎊 Awesome! Keep Walking!
+                </button>
             </div>
         </div>
 
@@ -688,6 +754,12 @@
             document.getElementById('goalCurrent').textContent = totalSteps.toLocaleString() + ' steps';
             document.getElementById('goalRemaining').textContent = remaining.toLocaleString() + ' to go!';
             
+            // Update fun stats
+            updateFunStats(totalSteps);
+            
+            // Check for milestone celebrations
+            checkMilestones(totalSteps);
+            
             // Add celebration if goal reached
             if (totalSteps >= GOAL_STEPS) {
                 document.getElementById('goalRemaining').textContent = '🎉 Goal Achieved! 🎉';
@@ -1050,6 +1122,10 @@
 
             // Update charts
             updateCharts(byAge, byGender, byBuilding, dailySteps);
+            
+            // Update fun stats
+            const totalSteps = Object.values(participantSteps).reduce((sum, steps) => sum + steps, 0);
+            updateFunStats(totalSteps);
         }
 
         // Update charts
@@ -1258,6 +1334,39 @@
             }
         }
 
+        // Update fun stats
+        function updateFunStats(totalSteps) {
+            // Constants
+            const AVG_STRIDE_M = 0.762;  // Average stride length in meters
+            const SOCIETY_PERIMETER_M = 440;  // Apostrophe society perimeter
+            const MUMBAI_DELHI_KM = 1411;  // Mumbai to Delhi distance
+            const SPACE_BOUNDARY_KM = 100;  // Kármán line (space boundary)
+            const CALORIES_PER_STEP = 0.05;  // Average calories per step
+            const CO2_PER_KM = 0.2;  // CO2 saved per km (vs driving) in kg
+            const TREE_CO2_PER_YEAR = 21.8;  // CO2 absorbed by one tree per year in kg
+            
+            // Calculate distance
+            const totalDistanceM = totalSteps * AVG_STRIDE_M;
+            const totalDistanceKm = totalDistanceM / 1000;
+            
+            // Calculate each stat
+            const distanceKm = totalDistanceKm.toFixed(0);
+            const societyLoops = Math.floor(totalDistanceM / SOCIETY_PERIMETER_M).toLocaleString();
+            const mumbaiDelhiPercent = (totalDistanceKm / MUMBAI_DELHI_KM * 100).toFixed(1);
+            const calories = Math.floor(totalSteps * CALORIES_PER_STEP).toLocaleString();
+            const co2Saved = totalDistanceKm * CO2_PER_KM;
+            const treesEquivalent = Math.floor(co2Saved / TREE_CO2_PER_YEAR);
+            const spaceTrips = (totalDistanceKm / SPACE_BOUNDARY_KM).toFixed(1);
+            
+            // Update DOM
+            document.getElementById('statDistance').textContent = distanceKm + ' km';
+            document.getElementById('statLoops').textContent = societyLoops;
+            document.getElementById('statIndia').textContent = mumbaiDelhiPercent + '%';
+            document.getElementById('statCalories').textContent = calories;
+            document.getElementById('statTrees').textContent = treesEquivalent;
+            document.getElementById('statSpace').textContent = spaceTrips + '×';
+        }
+
         // Toggle dashboard
         async function toggleDashboard() {
             const dashboard = document.getElementById('dashboard');
@@ -1272,6 +1381,106 @@
                 dashboard.classList.add('hidden');
                 button.textContent = '▼ View Community Dashboard';
             }
+        }
+
+        // Milestone celebrations
+        const MILESTONES = [
+            {
+                steps: 500000,
+                icon: '🎯',
+                title: '500K Steps Reached!',
+                message: 'Half a million steps! We\'re just getting started!',
+                stats: ['381 km covered', '866 loops of Apostrophe', '27% to Mumbai']
+            },
+            {
+                steps: 1000000,
+                icon: '🎊',
+                title: '1 MILLION STEPS!',
+                message: 'One million steps achieved! We\'ve walked to Mumbai!',
+                stats: ['762 km covered', '1,732 loops of Apostrophe', '54% to Mumbai', '50,000 calories burned']
+            },
+            {
+                steps: 2500000,
+                icon: '🏆',
+                title: '2.5 Million Steps!',
+                message: 'Quarter way to our goal! We\'ve crossed Mumbai-Delhi!',
+                stats: ['1,905 km covered', '4,330 loops of Apostrophe', '135% to Mumbai', '125,000 calories burned']
+            },
+            {
+                steps: 5000000,
+                icon: '🥇',
+                title: 'HALFWAY THERE!',
+                message: '5 MILLION STEPS! We\'ve walked from Mumbai to Delhi and back!',
+                stats: ['3,810 km covered', '8,659 loops of Apostrophe', '270% to Mumbai', '250,000 calories burned', '349 trees equivalent']
+            },
+            {
+                steps: 7500000,
+                icon: '🌟',
+                title: '7.5 Million Steps!',
+                message: 'Three-quarters complete! The finish line is in sight!',
+                stats: ['5,715 km covered', '12,989 loops of Apostrophe', '405% to Mumbai', '375,000 calories burned', '524 trees equivalent']
+            },
+            {
+                steps: 10000000,
+                icon: '🥳',
+                title: 'GOAL ACHIEVED!!!',
+                message: '10 MILLION STEPS! WE DID IT TOGETHER! 🎉🎉🎉',
+                stats: ['7,620 km covered', '17,318 loops of Apostrophe', '540% to Mumbai', '500,000 calories burned', '698 trees equivalent', '76 trips to space!']
+            }
+        ];
+
+        function checkMilestones(totalSteps) {
+            // Get previously shown milestones from localStorage
+            const shownMilestones = JSON.parse(localStorage.getItem('shownMilestones') || '[]');
+            
+            // Find the highest milestone we've reached but haven't shown yet
+            let milestoneToShow = null;
+            for (let i = MILESTONES.length - 1; i >= 0; i--) {
+                const milestone = MILESTONES[i];
+                if (totalSteps >= milestone.steps && !shownMilestones.includes(milestone.steps)) {
+                    milestoneToShow = milestone;
+                    break;
+                }
+            }
+            
+            // Show milestone if found
+            if (milestoneToShow) {
+                showMilestone(milestoneToShow);
+                // Mark as shown
+                shownMilestones.push(milestoneToShow.steps);
+                localStorage.setItem('shownMilestones', JSON.stringify(shownMilestones));
+            }
+        }
+
+        function showMilestone(milestone) {
+            // Update modal content
+            document.getElementById('milestoneIcon').textContent = milestone.icon;
+            document.getElementById('milestoneTitle').textContent = milestone.title;
+            document.getElementById('milestoneMessage').textContent = milestone.message;
+            
+            // Build stats HTML
+            const statsHTML = milestone.stats.map(stat => 
+                `<div class="flex items-center gap-2 mb-2">
+                    <span class="text-blue-600 text-xl">✓</span>
+                    <span class="text-gray-700">${stat}</span>
+                </div>`
+            ).join('');
+            document.getElementById('milestoneStats').innerHTML = statsHTML;
+            
+            // Show modal
+            document.getElementById('milestoneModal').classList.remove('hidden');
+            
+            // Play celebration sound (optional - browser support varies)
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA8PVKXi8bVjHQU2jdXzzn0pBSt+zPLaizsIGGS57OihUBELTqPh8bllHgU0itTz0H8rBSx+zPLajTsIF2W57OmgUREKTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBQ==');
+                audio.play().catch(() => {}); // Ignore if audio fails
+            } catch (e) {
+                // Audio not supported, ignore
+            }
+        }
+
+        function closeMilestone() {
+            document.getElementById('milestoneModal').classList.add('hidden');
         }
 
         // Initialize on page load
