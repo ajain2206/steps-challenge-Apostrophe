@@ -822,16 +822,20 @@
         function loadLeaderboard() {
             if (!window.dashboardData) return;
             
-            const { participantSteps, profileMap } = window.dashboardData;
+            const { participantSteps, profileMap, steps } = window.dashboardData;
             
             // Get all participants
             let allParticipants = Object.entries(participantSteps)
-                .map(([uniqueKey, steps]) => ({
-                    uniqueKey: uniqueKey,
-                    flatNo: profileMap[uniqueKey]?.flatNo || 'Unknown',
-                    name: profileMap[uniqueKey]?.name || 'Unknown',
-                    steps: steps
-                }));
+                .map(([uniqueKey, totalSteps]) => {
+                    const completion = calculateCompletion(uniqueKey, steps);
+                    return {
+                        uniqueKey: uniqueKey,
+                        flatNo: profileMap[uniqueKey]?.flatNo || 'Unknown',
+                        name: profileMap[uniqueKey]?.name || 'Unknown',
+                        steps: totalSteps,
+                        ...completion
+                    };
+                });
             
             // Apply search filter
             const searchTerm = document.getElementById('searchParticipant')?.value.toLowerCase() || '';
@@ -856,11 +860,18 @@
             const leaderboardHtml = allParticipants.length > 0
                 ? allParticipants.map((entry, idx) => `
                     <div class="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                        <div class="flex items-center gap-2 sm:gap-4">
+                        <div class="flex items-center gap-2 sm:gap-4 flex-1">
                             <span class="text-sm sm:text-lg font-bold text-gray-400 w-5 sm:w-8">#${idx + 1}</span>
-                            <div>
+                            <div class="flex-1">
                                 <p class="font-semibold text-gray-800 text-sm sm:text-base">${entry.name}</p>
                                 <p class="text-xs sm:text-sm text-gray-600">Flat ${entry.flatNo}</p>
+                                <div class="mt-1 flex items-center gap-2">
+                                    <span class="text-lg">${entry.statusIcon}</span>
+                                    <span class="text-xs sm:text-sm ${entry.statusColor} font-medium">
+                                        ${entry.daysSubmitted}/${entry.totalDays} days
+                                    </span>
+                                    <span class="text-xs text-gray-500">(${entry.percentage}%)</span>
+                                </div>
                             </div>
                         </div>
                         <p class="text-base sm:text-xl font-bold text-blue-600">${entry.steps.toLocaleString()}</p>
@@ -874,6 +885,77 @@
             
             // Populate day-wise dropdown
             populateDaywiseDropdown(allParticipants);
+        }
+
+        // Calculate completion percentage and missing days
+        function calculateCompletion(uniqueKey, allSteps) {
+            // Get date range (Jan 1 to today)
+            const startDate = new Date('2026-01-01');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Generate all dates from start to today
+            const allDates = [];
+            let currentDate = new Date(startDate);
+            while (currentDate <= today) {
+                allDates.push(currentDate.toISOString().split('T')[0]);
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            
+            // Get dates when user submitted steps
+            const userSteps = allSteps.filter(s => {
+                const stepKey = s.uniqueKey || createUniqueKey(s.name, s.flatNo);
+                return stepKey === uniqueKey;
+            });
+            
+            const submittedDates = new Set(
+                userSteps.map(s => {
+                    // Handle both Date objects and string dates
+                    const dateStr = s.date instanceof Date 
+                        ? s.date.toISOString().split('T')[0]
+                        : (typeof s.date === 'string' ? s.date.split('T')[0] : s.date);
+                    return dateStr;
+                })
+            );
+            
+            const totalDays = allDates.length;
+            const daysSubmitted = submittedDates.size;
+            const daysMissing = totalDays - daysSubmitted;
+            const percentage = totalDays > 0 ? Math.round((daysSubmitted / totalDays) * 100) : 0;
+            
+            // Determine status
+            let statusIcon, statusColor, statusText;
+            if (percentage >= 90) {
+                statusIcon = '✅';
+                statusColor = 'text-green-600';
+                statusText = 'Perfect!';
+            } else if (percentage >= 70) {
+                statusIcon = '✅';
+                statusColor = 'text-green-600';
+                statusText = 'Great!';
+            } else if (percentage >= 50) {
+                statusIcon = '⚠️';
+                statusColor = 'text-yellow-600';
+                statusText = 'Good';
+            } else if (percentage >= 30) {
+                statusIcon = '⚠️';
+                statusColor = 'text-orange-600';
+                statusText = 'Need push!';
+            } else {
+                statusIcon = '❌';
+                statusColor = 'text-red-600';
+                statusText = 'Come back!';
+            }
+            
+            return {
+                totalDays,
+                daysSubmitted,
+                daysMissing,
+                percentage,
+                statusIcon,
+                statusColor,
+                statusText
+            };
         }
 
         // Switch between cumulative and day-wise tabs
