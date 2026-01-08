@@ -1258,26 +1258,31 @@
             
             console.log(`Total days in challenge: ${totalDays} (Jan 1 to ${today.toISOString().split('T')[0]})`);
             
-            // Calculate building stats (participant count, daily building avg, and daily per person avg)
+            // Calculate building stats - all 5 metrics
             const buildingStats = {};
             buildingData.forEach(([building, totalSteps]) => {
                 const participantCount = buildingParticipants[building] ? buildingParticipants[building].size : 0;
                 
-                // Daily building average: Total steps / Days
-                const dailyBuildingAvg = totalDays > 0 ? Math.round(totalSteps / totalDays) : 0;
+                // Metric 3: Daily Average Steps (building total per day)
+                const dailyAvgSteps = totalDays > 0 ? Math.round(totalSteps / totalDays) : 0;
                 
-                // Daily per person average: Total steps / (Participants × Days)
-                const dailyPerPersonAvg = (participantCount > 0 && totalDays > 0) 
+                // Metric 4: Participant Average Steps (total per person)
+                const participantAvgSteps = participantCount > 0 ? Math.round(totalSteps / participantCount) : 0;
+                
+                // Metric 5: Daily Per Participant Average
+                const dailyPerParticipantAvg = (participantCount > 0 && totalDays > 0) 
                     ? Math.round(totalSteps / (participantCount * totalDays)) 
                     : 0;
                 
                 buildingStats[building] = {
-                    participants: participantCount,
-                    dailyBuildingAvg: dailyBuildingAvg,
-                    dailyPerPersonAvg: dailyPerPersonAvg
+                    totalSteps: totalSteps,                       // Metric 1
+                    participants: participantCount,                // Metric 2
+                    dailyAvgSteps: dailyAvgSteps,                 // Metric 3
+                    participantAvgSteps: participantAvgSteps,     // Metric 4
+                    dailyPerParticipantAvg: dailyPerParticipantAvg // Metric 5
                 };
                 
-                console.log(`Building ${building}: ${participantCount} participants, Daily bldg avg: ${dailyBuildingAvg}, Daily per person: ${dailyPerPersonAvg} steps/person/day`);
+                console.log(`Building ${building}: Total: ${totalSteps}, Participants: ${participantCount}, Daily avg: ${dailyAvgSteps}, Per participant: ${participantAvgSteps}, Daily per participant: ${dailyPerParticipantAvg}`);
             });
 
             // Daily steps chart
@@ -1385,95 +1390,7 @@
                 console.log('Building chart data:', buildingData);
                 console.log('Building stats:', buildingStats);
                 
-                // Custom plugin to display text inside horizontal bars
-                const insideBarLabelsPlugin = {
-                    id: 'insideBarLabels',
-                    afterDatasetsDraw(chart) {
-                        console.log('🎨 insideBarLabelsPlugin executing...');
-                        const ctx = chart.ctx;
-                        const meta = chart.getDatasetMeta(0);
-                        
-                        console.log('📊 Drawing labels for', meta.data.length, 'bars');
-                        
-                        meta.data.forEach((bar, index) => {
-                            const building = buildingData[index][0];
-                            const stats = buildingStats[building];
-                            
-                            if (!stats) {
-                                console.warn(`⚠️ No stats for building ${building}`);
-                                return;
-                            }
-                            
-                            // For horizontal bars: bar.x is the right edge, bar.base is left edge
-                            const barWidth = bar.x - bar.base;
-                            const centerX = bar.base + (barWidth / 2);
-                            const centerY = bar.y;
-                            
-                            console.log(`Bar ${index}: x=${bar.x}, base=${bar.base}, y=${bar.y}, width=${barWidth}`);
-                            
-                            // Check screen width for responsive text
-                            const isMobile = window.innerWidth < 576;
-                            const isTablet = window.innerWidth >= 576 && window.innerWidth < 768;
-                            
-                            // Use white text on colored bars
-                            ctx.fillStyle = '#FFFFFF';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            
-                            // Responsive font sizes
-                            const fontSize = isMobile ? 9 : (isTablet ? 10 : 11);
-                            const lineSpacing = isMobile ? 12 : 14;
-                            
-                            // Prepare all 3 lines of text
-                            // Line 1: Participant count
-                            const participantText = isMobile 
-                                ? `${stats.participants}p`
-                                : (isTablet ? `${stats.participants} people` : `${stats.participants} participants`);
-                            
-                            // Line 2: Daily Building Average
-                            const buildingAvgText = isMobile 
-                                ? `Bldg: ${(stats.dailyBuildingAvg / 1000).toFixed(1)}K/day`
-                                : (isTablet ? `Bldg: ${stats.dailyBuildingAvg.toLocaleString()}/day` : `Daily Building Avg: ${stats.dailyBuildingAvg.toLocaleString()}`);
-                            
-                            // Line 3: Daily Per Person Average
-                            const perPersonAvgText = isMobile 
-                                ? `Person: ${stats.dailyPerPersonAvg}/day`
-                                : (isTablet ? `Person: ${stats.dailyPerPersonAvg}/day` : `Daily Per Person Avg: ${stats.dailyPerPersonAvg}`);
-                            
-                            // Draw text on right side of bar (if bar is wide enough)
-                            if (barWidth > 120) {
-                                // Draw all 3 lines centered vertically
-                                ctx.font = `${fontSize}px sans-serif`;
-                                
-                                // Line 1: Participant count (top)
-                                ctx.fillText(participantText, centerX, centerY - lineSpacing);
-                                
-                                // Line 2: Daily Building Average (middle)
-                                ctx.font = `${fontSize}px sans-serif`;
-                                ctx.fillText(buildingAvgText, centerX, centerY);
-                                
-                                // Line 3: Daily Per Person Average (bottom) - BOLD
-                                ctx.font = `bold ${fontSize}px sans-serif`;
-                                ctx.fillText(perPersonAvgText, centerX, centerY + lineSpacing);
-                                
-                                console.log(`✏️ Drew 3 lines inside bar: "${participantText}", "${buildingAvgText}", "${perPersonAvgText}"`);
-                            } else {
-                                // If bar too narrow, draw compact version on the right
-                                ctx.textAlign = 'left';
-                                ctx.fillStyle = '#374151'; // Dark gray for outside text
-                                ctx.font = `${fontSize}px sans-serif`;
-                                const compactText = isMobile
-                                    ? `${stats.participants}p • ${stats.dailyPerPersonAvg}/day`
-                                    : `${participantText} • ${stats.dailyPerPersonAvg}/day`;
-                                ctx.fillText(compactText, bar.x + 10, centerY);
-                                
-                                console.log(`✏️ Drew compact outside bar: "${compactText}"`);
-                            }
-                        });
-                        
-                        console.log('✅ insideBarLabelsPlugin completed');
-                    }
-                };
+                // No plugin - clean bars, all stats in tooltip only
                 
                 buildingChart = new Chart(buildingContext, {
                     type: 'bar',
@@ -1506,10 +1423,11 @@
                                         const building = buildingData[context.dataIndex][0];
                                         const stats = buildingStats[building];
                                         return [
-                                            `Total: ${context.parsed.x.toLocaleString()} steps`,
-                                            `Participants: ${stats.participants}`,
-                                            `Daily Building Avg: ${stats.dailyBuildingAvg.toLocaleString()} steps/day`,
-                                            `Daily Per Person Avg: ${stats.dailyPerPersonAvg.toLocaleString()} steps/person/day`
+                                            `1. Total Steps: ${stats.totalSteps.toLocaleString()}`,
+                                            `2. Total Participants: ${stats.participants}`,
+                                            `3. Daily Average (Building): ${stats.dailyAvgSteps.toLocaleString()} steps/day`,
+                                            `4. Participant Average: ${stats.participantAvgSteps.toLocaleString()} steps/person`,
+                                            `5. Daily Per Participant: ${stats.dailyPerParticipantAvg.toLocaleString()} steps/person/day`
                                         ];
                                     }
                                 }
@@ -1532,11 +1450,10 @@
                                 }
                             }
                         }
-                    },
-                    plugins: [insideBarLabelsPlugin]
+                    }
                 });
                 
-                console.log('Building chart created successfully (horizontal)');
+                console.log('Building chart created successfully (horizontal, clean bars)');
             } else {
                 console.log('No building data to display');
             }
