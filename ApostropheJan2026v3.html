@@ -1250,15 +1250,34 @@
             // Sort building data alphabetically for consistent display
             buildingData.sort((a, b) => a[0].localeCompare(b[0]));
             
-            // Calculate building stats (participant count and average)
+            // Calculate total days from start to today
+            const startDate = new Date('2026-01-01');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const totalDays = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24)) + 1; // +1 to include start day
+            
+            console.log(`Total days in challenge: ${totalDays} (Jan 1 to ${today.toISOString().split('T')[0]})`);
+            
+            // Calculate building stats (participant count, daily building avg, and daily per person avg)
             const buildingStats = {};
             buildingData.forEach(([building, totalSteps]) => {
                 const participantCount = buildingParticipants[building] ? buildingParticipants[building].size : 0;
-                const avgSteps = participantCount > 0 ? Math.round(totalSteps / participantCount) : 0;
+                
+                // Daily building average: Total steps / Days
+                const dailyBuildingAvg = totalDays > 0 ? Math.round(totalSteps / totalDays) : 0;
+                
+                // Daily per person average: Total steps / (Participants × Days)
+                const dailyPerPersonAvg = (participantCount > 0 && totalDays > 0) 
+                    ? Math.round(totalSteps / (participantCount * totalDays)) 
+                    : 0;
+                
                 buildingStats[building] = {
                     participants: participantCount,
-                    average: avgSteps
+                    dailyBuildingAvg: dailyBuildingAvg,
+                    dailyPerPersonAvg: dailyPerPersonAvg
                 };
+                
+                console.log(`Building ${building}: ${participantCount} participants, Daily bldg avg: ${dailyBuildingAvg}, Daily per person: ${dailyPerPersonAvg} steps/person/day`);
             });
 
             // Daily steps chart
@@ -1402,40 +1421,53 @@
                             ctx.textBaseline = 'middle';
                             
                             // Responsive font sizes
-                            const fontSize = isMobile ? 10 : (isTablet ? 11 : 12);
-                            const lineSpacing = isMobile ? 14 : 16;
+                            const fontSize = isMobile ? 9 : (isTablet ? 10 : 11);
+                            const lineSpacing = isMobile ? 12 : 14;
                             
+                            // Prepare all 3 lines of text
                             // Line 1: Participant count
-                            ctx.font = `${fontSize}px sans-serif`;
                             const participantText = isMobile 
                                 ? `${stats.participants}p`
                                 : (isTablet ? `${stats.participants} people` : `${stats.participants} participants`);
                             
-                            // Line 2: Average
-                            ctx.font = `bold ${fontSize}px sans-serif`;
-                            const avgText = isMobile 
-                                ? `Avg: ${(stats.average / 1000).toFixed(1)}K`
-                                : (isTablet ? `Avg: ${stats.average.toLocaleString()}` : `Avg: ${stats.average.toLocaleString()} steps`);
+                            // Line 2: Daily Building Average
+                            const buildingAvgText = isMobile 
+                                ? `Bldg: ${(stats.dailyBuildingAvg / 1000).toFixed(1)}K/day`
+                                : (isTablet ? `Bldg: ${stats.dailyBuildingAvg.toLocaleString()}/day` : `Daily Building Avg: ${stats.dailyBuildingAvg.toLocaleString()}`);
+                            
+                            // Line 3: Daily Per Person Average
+                            const perPersonAvgText = isMobile 
+                                ? `Person: ${stats.dailyPerPersonAvg}/day`
+                                : (isTablet ? `Person: ${stats.dailyPerPersonAvg}/day` : `Daily Per Person Avg: ${stats.dailyPerPersonAvg}`);
                             
                             // Draw text on right side of bar (if bar is wide enough)
-                            if (barWidth > 100) {
-                                // Draw participant count
+                            if (barWidth > 120) {
+                                // Draw all 3 lines centered vertically
                                 ctx.font = `${fontSize}px sans-serif`;
-                                ctx.fillText(participantText, centerX, centerY - lineSpacing/2);
                                 
-                                // Draw average
+                                // Line 1: Participant count (top)
+                                ctx.fillText(participantText, centerX, centerY - lineSpacing);
+                                
+                                // Line 2: Daily Building Average (middle)
+                                ctx.font = `${fontSize}px sans-serif`;
+                                ctx.fillText(buildingAvgText, centerX, centerY);
+                                
+                                // Line 3: Daily Per Person Average (bottom) - BOLD
                                 ctx.font = `bold ${fontSize}px sans-serif`;
-                                ctx.fillText(avgText, centerX, centerY + lineSpacing/2);
+                                ctx.fillText(perPersonAvgText, centerX, centerY + lineSpacing);
                                 
-                                console.log(`✏️ Drew inside bar: "${participantText}" and "${avgText}"`);
+                                console.log(`✏️ Drew 3 lines inside bar: "${participantText}", "${buildingAvgText}", "${perPersonAvgText}"`);
                             } else {
-                                // If bar too narrow, draw on the right side of bar
+                                // If bar too narrow, draw compact version on the right
                                 ctx.textAlign = 'left';
                                 ctx.fillStyle = '#374151'; // Dark gray for outside text
                                 ctx.font = `${fontSize}px sans-serif`;
-                                ctx.fillText(`${participantText} • ${avgText}`, bar.x + 10, centerY);
+                                const compactText = isMobile
+                                    ? `${stats.participants}p • ${stats.dailyPerPersonAvg}/day`
+                                    : `${participantText} • ${stats.dailyPerPersonAvg}/day`;
+                                ctx.fillText(compactText, bar.x + 10, centerY);
                                 
-                                console.log(`✏️ Drew outside bar (too narrow): "${participantText} • ${avgText}"`);
+                                console.log(`✏️ Drew compact outside bar: "${compactText}"`);
                             }
                         });
                         
@@ -1451,8 +1483,8 @@
                             label: 'Steps',
                             data: buildingData.map(([_, steps]) => steps),
                             backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length]),
-                            barThickness: 40,
-                            maxBarThickness: 50
+                            barThickness: 50,
+                            maxBarThickness: 60
                         }]
                     },
                     options: {
@@ -1476,7 +1508,8 @@
                                         return [
                                             `Total: ${context.parsed.x.toLocaleString()} steps`,
                                             `Participants: ${stats.participants}`,
-                                            `Average: ${stats.average.toLocaleString()} steps/person`
+                                            `Daily Building Avg: ${stats.dailyBuildingAvg.toLocaleString()} steps/day`,
+                                            `Daily Per Person Avg: ${stats.dailyPerPersonAvg.toLocaleString()} steps/person/day`
                                         ];
                                     }
                                 }
