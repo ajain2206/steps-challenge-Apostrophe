@@ -449,15 +449,16 @@
                     </div>
                 </div>
 
-                <!-- Charts -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
-                        <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Steps by Building</h2>
-                        <div class="h-64">
-                            <canvas id="buildingChart"></canvas>
-                        </div>
+                <!-- Building Chart (Full Width) -->
+                <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
+                    <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">🏢 Building-wise Step Count</h2>
+                    <div class="h-80 sm:h-96">
+                        <canvas id="buildingChart"></canvas>
                     </div>
-                    
+                </div>
+
+                <!-- Age and Gender Charts (Side by Side) -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
                         <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Steps by Age Group</h2>
                         <div class="h-64">
@@ -1173,6 +1174,7 @@
             let byAge = { 'Under 18': 0, '18-30': 0, '31-45': 0, '46-60': 0, 'Over 60': 0 };
             let byGender = { 'Male': 0, 'Female': 0, 'Other': 0 };
             let byBuilding = {}; // Track by building
+            let buildingParticipants = {}; // Track unique participants per building
             let participantSteps = {}; // Track by unique key (name + flat)
             let dailySteps = {}; // Track daily aggregate
 
@@ -1198,6 +1200,12 @@
                     // Extract building from flat number (first character)
                     const building = profile.flatNo.charAt(0).toUpperCase();
                     byBuilding[building] = (byBuilding[building] || 0) + entry.steps;
+                    
+                    // Track unique participants per building
+                    if (!buildingParticipants[building]) {
+                        buildingParticipants[building] = new Set();
+                    }
+                    buildingParticipants[building].add(uniqueKey);
                     
                     // Aggregate by date
                     const dateKey = entry.date instanceof Date 
@@ -1226,7 +1234,7 @@
             loadLeaderboard();
 
             // Update charts
-            updateCharts(byAge, byGender, byBuilding, dailySteps);
+            updateCharts(byAge, byGender, byBuilding, buildingParticipants, dailySteps);
             
             // Update fun stats
             const totalSteps = Object.values(participantSteps).reduce((sum, steps) => sum + steps, 0);
@@ -1234,13 +1242,24 @@
         }
 
         // Update charts
-        function updateCharts(byAge, byGender, byBuilding, dailySteps) {
+        function updateCharts(byAge, byGender, byBuilding, buildingParticipants, dailySteps) {
             const ageData = Object.entries(byAge).filter(([_, steps]) => steps > 0);
             const genderData = Object.entries(byGender).filter(([_, steps]) => steps > 0);
             const buildingData = Object.entries(byBuilding).filter(([_, steps]) => steps > 0);
 
             // Sort building data alphabetically for consistent display
             buildingData.sort((a, b) => a[0].localeCompare(b[0]));
+            
+            // Calculate building stats (participant count and average)
+            const buildingStats = {};
+            buildingData.forEach(([building, totalSteps]) => {
+                const participantCount = buildingParticipants[building] ? buildingParticipants[building].size : 0;
+                const avgSteps = participantCount > 0 ? Math.round(totalSteps / participantCount) : 0;
+                buildingStats[building] = {
+                    participants: participantCount,
+                    average: avgSteps
+                };
+            });
 
             // Daily steps chart
             const dailyCtx = document.getElementById('dailyStepsChart').getContext('2d');
@@ -1320,7 +1339,15 @@
             }
 
             // Building chart
-            const buildingCtx = document.getElementById('buildingChart').getContext('2d');
+            const buildingCtx = document.getElementById('buildingChart');
+            
+            // Debug: Check if canvas exists
+            if (!buildingCtx) {
+                console.error('ERROR: buildingChart canvas element not found!');
+                return;
+            }
+            
+            const buildingContext = buildingCtx.getContext('2d');
             if (buildingChart) buildingChart.destroy();
             
             if (buildingData.length > 0) {
@@ -1336,19 +1363,107 @@
                     '#f97316', // Orange
                 ];
                 
-                buildingChart = new Chart(buildingCtx, {
+                console.log('Building chart data:', buildingData);
+                console.log('Building stats:', buildingStats);
+                
+                // Custom plugin to display text inside horizontal bars
+                const insideBarLabelsPlugin = {
+                    id: 'insideBarLabels',
+                    afterDatasetsDraw(chart) {
+                        console.log('🎨 insideBarLabelsPlugin executing...');
+                        const ctx = chart.ctx;
+                        const meta = chart.getDatasetMeta(0);
+                        
+                        console.log('📊 Drawing labels for', meta.data.length, 'bars');
+                        
+                        meta.data.forEach((bar, index) => {
+                            const building = buildingData[index][0];
+                            const stats = buildingStats[building];
+                            
+                            if (!stats) {
+                                console.warn(`⚠️ No stats for building ${building}`);
+                                return;
+                            }
+                            
+                            // For horizontal bars: bar.x is the right edge, bar.base is left edge
+                            const barWidth = bar.x - bar.base;
+                            const centerX = bar.base + (barWidth / 2);
+                            const centerY = bar.y;
+                            
+                            console.log(`Bar ${index}: x=${bar.x}, base=${bar.base}, y=${bar.y}, width=${barWidth}`);
+                            
+                            // Check screen width for responsive text
+                            const isMobile = window.innerWidth < 576;
+                            const isTablet = window.innerWidth >= 576 && window.innerWidth < 768;
+                            
+                            // Use white text on colored bars
+                            ctx.fillStyle = '#FFFFFF';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            
+                            // Responsive font sizes
+                            const fontSize = isMobile ? 10 : (isTablet ? 11 : 12);
+                            const lineSpacing = isMobile ? 14 : 16;
+                            
+                            // Line 1: Participant count
+                            ctx.font = `${fontSize}px sans-serif`;
+                            const participantText = isMobile 
+                                ? `${stats.participants}p`
+                                : (isTablet ? `${stats.participants} people` : `${stats.participants} participants`);
+                            
+                            // Line 2: Average
+                            ctx.font = `bold ${fontSize}px sans-serif`;
+                            const avgText = isMobile 
+                                ? `Avg: ${(stats.average / 1000).toFixed(1)}K`
+                                : (isTablet ? `Avg: ${stats.average.toLocaleString()}` : `Avg: ${stats.average.toLocaleString()} steps`);
+                            
+                            // Draw text on right side of bar (if bar is wide enough)
+                            if (barWidth > 100) {
+                                // Draw participant count
+                                ctx.font = `${fontSize}px sans-serif`;
+                                ctx.fillText(participantText, centerX, centerY - lineSpacing/2);
+                                
+                                // Draw average
+                                ctx.font = `bold ${fontSize}px sans-serif`;
+                                ctx.fillText(avgText, centerX, centerY + lineSpacing/2);
+                                
+                                console.log(`✏️ Drew inside bar: "${participantText}" and "${avgText}"`);
+                            } else {
+                                // If bar too narrow, draw on the right side of bar
+                                ctx.textAlign = 'left';
+                                ctx.fillStyle = '#374151'; // Dark gray for outside text
+                                ctx.font = `${fontSize}px sans-serif`;
+                                ctx.fillText(`${participantText} • ${avgText}`, bar.x + 10, centerY);
+                                
+                                console.log(`✏️ Drew outside bar (too narrow): "${participantText} • ${avgText}"`);
+                            }
+                        });
+                        
+                        console.log('✅ insideBarLabelsPlugin completed');
+                    }
+                };
+                
+                buildingChart = new Chart(buildingContext, {
                     type: 'bar',
                     data: {
                         labels: buildingData.map(([building]) => `Building ${building}`),
                         datasets: [{
                             label: 'Steps',
                             data: buildingData.map(([_, steps]) => steps),
-                            backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length])
+                            backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length]),
+                            barThickness: 40,
+                            maxBarThickness: 50
                         }]
                     },
                     options: {
+                        indexAxis: 'y', // This makes it horizontal!
                         responsive: true,
                         maintainAspectRatio: false,
+                        layout: {
+                            padding: {
+                                right: 20 // Extra space on right for labels
+                            }
+                        },
                         plugins: {
                             legend: {
                                 display: false
@@ -1356,23 +1471,41 @@
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {
-                                        return 'Steps: ' + context.parsed.y.toLocaleString();
+                                        const building = buildingData[context.dataIndex][0];
+                                        const stats = buildingStats[building];
+                                        return [
+                                            `Total: ${context.parsed.x.toLocaleString()} steps`,
+                                            `Participants: ${stats.participants}`,
+                                            `Average: ${stats.average.toLocaleString()} steps/person`
+                                        ];
                                     }
                                 }
                             }
                         },
                         scales: {
-                            y: {
+                            x: {
                                 beginAtZero: true,
                                 ticks: {
                                     callback: function(value) {
                                         return value.toLocaleString();
                                     }
                                 }
+                            },
+                            y: {
+                                ticks: {
+                                    font: {
+                                        size: window.innerWidth < 576 ? 11 : 12
+                                    }
+                                }
                             }
                         }
-                    }
+                    },
+                    plugins: [insideBarLabelsPlugin]
                 });
+                
+                console.log('Building chart created successfully (horizontal)');
+            } else {
+                console.log('No building data to display');
             }
 
             // Age chart
