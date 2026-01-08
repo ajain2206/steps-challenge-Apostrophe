@@ -452,7 +452,7 @@
                 <!-- Building Chart (Full Width) -->
                 <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
                     <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">🏢 Building-wise Step Count</h2>
-                    <div class="h-80 sm:h-96">
+                    <div class="h-96 sm:h-96">
                         <canvas id="buildingChart"></canvas>
                     </div>
                 </div>
@@ -1392,6 +1392,15 @@
                 
                 // No plugin - clean bars, all stats in tooltip only
                 
+                // Responsive bar thickness to avoid overlap on mobile
+                const isMobile = window.innerWidth < 576;
+                const isTablet = window.innerWidth >= 576 && window.innerWidth < 768;
+                
+                const barThickness = isMobile ? 30 : (isTablet ? 40 : 50);
+                const maxBarThickness = isMobile ? 35 : (isTablet ? 45 : 60);
+                
+                console.log(`Screen width: ${window.innerWidth}, Bar thickness: ${barThickness}`);
+                
                 buildingChart = new Chart(buildingContext, {
                     type: 'bar',
                     data: {
@@ -1400,8 +1409,10 @@
                             label: 'Steps',
                             data: buildingData.map(([_, steps]) => steps),
                             backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length]),
-                            barThickness: 50,
-                            maxBarThickness: 60
+                            barThickness: barThickness,
+                            maxBarThickness: maxBarThickness,
+                            categoryPercentage: 0.8,  // Space between categories
+                            barPercentage: 0.9         // Width of bar within category
                         }]
                     },
                     options: {
@@ -1423,11 +1434,9 @@
                                         const building = buildingData[context.dataIndex][0];
                                         const stats = buildingStats[building];
                                         return [
-                                            `1. Total Steps: ${stats.totalSteps.toLocaleString()}`,
-                                            `2. Total Participants: ${stats.participants}`,
-                                            `3. Daily Average (Building): ${stats.dailyAvgSteps.toLocaleString()} steps/day`,
-                                            `4. Participant Average: ${stats.participantAvgSteps.toLocaleString()} steps/person`,
-                                            `5. Daily Per Participant: ${stats.dailyPerParticipantAvg.toLocaleString()} steps/person/day`
+                                            `Total Steps: ${stats.totalSteps.toLocaleString()}`,
+                                            `Participants: ${stats.participants}`,
+                                            `Daily Per Participant: ${stats.dailyPerParticipantAvg.toLocaleString()} steps/person/day`
                                         ];
                                     }
                                 }
