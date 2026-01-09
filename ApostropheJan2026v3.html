@@ -1244,9 +1244,26 @@
 
         // Update charts
         function updateCharts(byAge, byGender, byBuilding, buildingParticipants, dailySteps) {
-            const ageData = Object.entries(byAge).filter(([_, steps]) => steps > 0);
-            const genderData = Object.entries(byGender).filter(([_, steps]) => steps > 0);
-            const buildingData = Object.entries(byBuilding).filter(([_, steps]) => steps > 0);
+            console.log('=== UPDATE CHARTS CALLED ===');
+            console.log('Screen width:', window.innerWidth);
+            console.log('Is mobile:', window.innerWidth < 768);
+            
+            // On mobile, add small delay to ensure DOM is ready
+            const isMobile = window.innerWidth < 768;
+            const renderDelay = isMobile ? 300 : 0;
+            
+            setTimeout(() => {
+                console.log('Starting chart rendering (after', renderDelay, 'ms delay)');
+                
+                const ageData = Object.entries(byAge).filter(([_, steps]) => steps > 0);
+                const genderData = Object.entries(byGender).filter(([_, steps]) => steps > 0);
+                const buildingData = Object.entries(byBuilding).filter(([_, steps]) => steps > 0);
+                
+                console.log('Chart data:', {
+                    ageData: ageData.length,
+                    genderData: genderData.length,
+                    buildingData: buildingData.length
+                });
 
             // Sort building data alphabetically for consistent display
             buildingData.sort((a, b) => a[0].localeCompare(b[0]));
@@ -1398,9 +1415,74 @@
                 const dailyAvgWinner = buildingData.reduce((max, curr) => 
                     buildingStats[curr[0]].dailyPerParticipantAvg > buildingStats[max[0]].dailyPerParticipantAvg ? curr : max, buildingData[0])[0];
                 
-                // Create table HTML
+                // Create mobile card view
+                let mobileCardsHTML = '<div class="block md:hidden space-y-4">';
+                
+                buildingData.forEach(([building, totalSteps], idx) => {
+                    const stats = buildingStats[building];
+                    const color = buildingColors[idx % buildingColors.length];
+                    const stepsPercent = (totalSteps / maxSteps) * 100;
+                    const participantsPercent = (stats.participants / maxParticipants) * 100;
+                    const dailyAvgPercent = (stats.dailyPerParticipantAvg / maxDailyAvg) * 100;
+                    
+                    // Badges for winners
+                    const stepsWinnerBadge = building === stepsWinner ? '<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">🏆</span>' : '';
+                    const participantsWinnerBadge = building === participantsWinner ? '<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">👥</span>' : '';
+                    const dailyAvgWinnerBadge = building === dailyAvgWinner ? '<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">⭐</span>' : '';
+                    
+                    mobileCardsHTML += `
+                        <div class="bg-white border-2 rounded-lg p-4 shadow-sm" style="border-left-color: ${color}; border-left-width: 4px;">
+                            <div class="flex items-center mb-3">
+                                <div class="w-4 h-4 rounded-full mr-2" style="background-color: ${color}"></div>
+                                <h3 class="text-lg font-bold text-gray-900">Building ${building}</h3>
+                            </div>
+                            
+                            <!-- Total Steps -->
+                            <div class="mb-3">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-medium text-gray-500">TOTAL STEPS</span>
+                                    ${stepsWinnerBadge}
+                                </div>
+                                <div class="text-xl font-bold text-gray-900 mb-1">${totalSteps.toLocaleString()}</div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="h-2 rounded-full transition-all duration-500" style="width: ${stepsPercent}%; background-color: ${color}"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Participants -->
+                            <div class="mb-3">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-medium text-gray-500">PARTICIPANTS</span>
+                                    ${participantsWinnerBadge}
+                                </div>
+                                <div class="text-xl font-bold text-gray-900 mb-1">
+                                    <span class="text-2xl">👥</span> ${stats.participants}
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="h-2 rounded-full transition-all duration-500" style="width: ${participantsPercent}%; background-color: ${color}"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Daily Avg -->
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-medium text-gray-500">DAILY AVG PER PERSON</span>
+                                    ${dailyAvgWinnerBadge}
+                                </div>
+                                <div class="text-xl font-bold text-gray-900 mb-1">${stats.dailyPerParticipantAvg.toLocaleString()} <span class="text-sm text-gray-500">steps/day</span></div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="h-2 rounded-full transition-all duration-500" style="width: ${dailyAvgPercent}%; background-color: ${color}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                mobileCardsHTML += '</div>';
+                
+                // Create desktop table view
                 let tableHTML = `
-                    <div class="overflow-x-auto">
+                    <div class="hidden md:block">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
@@ -1485,8 +1567,14 @@
                             </tbody>
                         </table>
                     </div>
+                `;
+                
+                // Combine mobile cards and desktop table with shared legend
+                const combinedHTML = `
+                    ${mobileCardsHTML}
+                    ${tableHTML}
                     
-                    <!-- Legend -->
+                    <!-- Legend (shared between mobile and desktop) -->
                     <div class="mt-4 flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600 justify-center sm:justify-start">
                         <div class="flex items-center">
                             <span class="w-3 h-3 rounded-full mr-2" style="background-color: #fef3c7"></span>
@@ -1503,9 +1591,9 @@
                     </div>
                 `;
                 
-                buildingStatsTableDiv.innerHTML = tableHTML;
+                buildingStatsTableDiv.innerHTML = combinedHTML;
                 
-                console.log('Building statistics table created successfully');
+                console.log('Building statistics created successfully (cards for mobile, table for desktop)');
                 console.log('Winners: Steps:', stepsWinner, 'Participants:', participantsWinner, 'Daily Avg:', dailyAvgWinner);
             } else {
                 buildingStatsTableDiv.innerHTML = '<p class="text-gray-500 text-center py-8">No building data to display</p>';
@@ -1514,48 +1602,72 @@
 
 
             // Age chart
-            const ageCtx = document.getElementById('ageChart').getContext('2d');
-            if (ageChart) ageChart.destroy();
+            const ageCtxElement = document.getElementById('ageChart');
+            console.log('Age chart element:', ageCtxElement);
             
-            if (ageData.length > 0) {
-                ageChart = new Chart(ageCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: ageData.map(([age]) => age),
-                        datasets: [{
-                            label: 'Steps',
-                            data: ageData.map(([_, steps]) => steps),
-                            backgroundColor: '#3b82f6'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
+            if (!ageCtxElement) {
+                console.error('ERROR: ageChart canvas element not found!');
+            } else {
+                const ageCtx = ageCtxElement.getContext('2d');
+                if (ageChart) ageChart.destroy();
+                
+                if (ageData.length > 0) {
+                    console.log('Creating age chart with data:', ageData);
+                    ageChart = new Chart(ageCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ageData.map(([age]) => age),
+                            datasets: [{
+                                label: 'Steps',
+                                data: ageData.map(([_, steps]) => steps),
+                                backgroundColor: '#3b82f6'
+                            }]
                         },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return value.toLocaleString();
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value.toLocaleString();
+                                        }
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45
                                     }
                                 }
                             }
                         }
-                    }
-                });
+                    });
+                    console.log('Age chart created successfully');
+                } else {
+                    console.log('No age data to display');
+                }
             }
 
             // Gender chart
-            const genderCtx = document.getElementById('genderChart').getContext('2d');
-            if (genderChart) genderChart.destroy();
+            const genderCtxElement = document.getElementById('genderChart');
+            console.log('Gender chart element:', genderCtxElement);
             
-            if (genderData.length > 0) {
-                genderChart = new Chart(genderCtx, {
+            if (!genderCtxElement) {
+                console.error('ERROR: genderChart canvas element not found!');
+            } else {
+                const genderCtx = genderCtxElement.getContext('2d');
+                if (genderChart) genderChart.destroy();
+                
+                if (genderData.length > 0) {
+                    console.log('Creating gender chart with data:', genderData);
+                    genderChart = new Chart(genderCtx, {
                     type: 'pie',
                     data: {
                         labels: genderData.map(([gender]) => gender),
@@ -1574,8 +1686,15 @@
                         }
                     }
                 });
+                console.log('Gender chart created successfully');
+            } else {
+                console.log('No gender data to display');
             }
         }
+        
+        console.log('=== ALL CHARTS RENDERED ===');
+        }, renderDelay);
+    }
 
         // Update fun stats
         function updateFunStats(totalSteps) {
