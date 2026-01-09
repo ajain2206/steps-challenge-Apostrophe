@@ -450,10 +450,33 @@
                 </div>
 
                 <!-- Building Chart (Full Width) -->
+                <!-- Building Charts (3 separate vertical bar charts) -->
                 <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
-                    <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">🏢 Building-wise Step Count</h2>
-                    <div class="h-96 sm:h-96">
-                        <canvas id="buildingChart"></canvas>
+                    <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">🏢 Building Statistics</h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                        <!-- Chart 1: Total Steps -->
+                        <div>
+                            <h3 class="text-sm sm:text-base font-semibold text-gray-700 mb-2 text-center">Total Steps</h3>
+                            <div class="h-64 sm:h-72">
+                                <canvas id="buildingTotalStepsChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 2: Participants -->
+                        <div>
+                            <h3 class="text-sm sm:text-base font-semibold text-gray-700 mb-2 text-center">Participants</h3>
+                            <div class="h-64 sm:h-72">
+                                <canvas id="buildingParticipantsChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 3: Daily Per Participant Average -->
+                        <div>
+                            <h3 class="text-sm sm:text-base font-semibold text-gray-700 mb-2 text-center">Daily Per Participant Avg</h3>
+                            <div class="h-64 sm:h-72">
+                                <canvas id="buildingDailyAvgChart"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1362,265 +1385,195 @@
                 });
             }
 
-            // Building chart
-            const buildingCtx = document.getElementById('buildingChart');
+            // Building Charts (3 separate vertical charts)
             
-            // Debug: Check if canvas exists
-            if (!buildingCtx) {
-                console.error('ERROR: buildingChart canvas element not found!');
-                return;
-            }
+            // Generate distinct colors for each building
+            const buildingColors = [
+                '#3b82f6', // Blue
+                '#ef4444', // Red
+                '#10b981', // Green
+                '#f59e0b', // Amber
+                '#8b5cf6', // Violet
+                '#ec4899', // Pink
+                '#14b8a6', // Teal
+                '#f97316', // Orange
+            ];
             
-            const buildingContext = buildingCtx.getContext('2d');
-            if (buildingChart) buildingChart.destroy();
+            console.log('Building chart data:', buildingData);
+            console.log('Building stats:', buildingStats);
             
             if (buildingData.length > 0) {
-                // Generate distinct colors for each building
-                const buildingColors = [
-                    '#3b82f6', // Blue
-                    '#ef4444', // Red
-                    '#10b981', // Green
-                    '#f59e0b', // Amber
-                    '#8b5cf6', // Violet
-                    '#ec4899', // Pink
-                    '#14b8a6', // Teal
-                    '#f97316', // Orange
-                ];
-                
-                console.log('Building chart data:', buildingData);
-                console.log('Building stats:', buildingStats);
-                
-                // Responsive sizing
-                const isMobile = window.innerWidth < 576;
-                const isTablet = window.innerWidth >= 576 && window.innerWidth < 768;
-                
-                const barThickness = isMobile ? 30 : (isTablet ? 40 : 50);
-                const maxBarThickness = isMobile ? 35 : (isTablet ? 45 : 60);
-                
-                console.log(`Screen width: ${window.innerWidth}, Bar thickness: ${barThickness}`);
-                
-                // Plugin 1: Draw participant count INSIDE bars (left side)
-                const participantCountPlugin = {
-                    id: 'participantCount',
-                    afterDatasetsDraw(chart) {
-                        const ctx = chart.ctx;
-                        const meta = chart.getDatasetMeta(0); // Bar dataset
-                        
-                        meta.data.forEach((bar, index) => {
-                            const building = buildingData[index][0];
-                            const stats = buildingStats[building];
-                            
-                            if (!stats) return;
-                            
-                            const x = bar.base + 15; // 15px from left edge
-                            const y = bar.y;
-                            
-                            ctx.fillStyle = '#FFFFFF'; // White text
-                            ctx.font = isMobile ? '12px sans-serif' : '14px sans-serif';
-                            ctx.textAlign = 'left';
-                            ctx.textBaseline = 'middle';
-                            
-                            // Draw icon and number: 👥 12
-                            const text = `👥 ${stats.participants}`;
-                            ctx.fillText(text, x, y);
-                        });
-                    }
-                };
-                
-                // Plugin 2: Draw total steps OUTSIDE bars (right side)
-                const totalStepsPlugin = {
-                    id: 'totalSteps',
-                    afterDatasetsDraw(chart) {
-                        const ctx = chart.ctx;
-                        const meta = chart.getDatasetMeta(0); // Bar dataset
-                        
-                        meta.data.forEach((bar, index) => {
-                            const building = buildingData[index][0];
-                            const stats = buildingStats[building];
-                            
-                            if (!stats) return;
-                            
-                            const x = bar.x + 10; // 10px outside bar
-                            const y = bar.y;
-                            
-                            ctx.fillStyle = '#374151'; // Dark gray
-                            ctx.font = isMobile ? 'bold 11px sans-serif' : 'bold 12px sans-serif';
-                            ctx.textAlign = 'left';
-                            ctx.textBaseline = 'middle';
-                            
-                            // Format number
-                            const formattedSteps = isMobile 
-                                ? (stats.totalSteps >= 1000 ? (stats.totalSteps / 1000).toFixed(1) + 'K' : stats.totalSteps)
-                                : stats.totalSteps.toLocaleString();
-                            
-                            ctx.fillText(formattedSteps, x, y);
-                        });
-                    }
-                };
-                
-                buildingChart = new Chart(buildingContext, {
-                    type: 'bar',
-                    data: {
-                        labels: buildingData.map(([building]) => `Building ${building}`),
-                        datasets: [
-                            // Dataset 1: Bars (Total Steps)
-                            {
+                // Chart 1: Total Steps per Building (Vertical)
+                const totalStepsCtx = document.getElementById('buildingTotalStepsChart');
+                if (totalStepsCtx) {
+                    if (window.buildingTotalStepsChart) window.buildingTotalStepsChart.destroy();
+                    
+                    window.buildingTotalStepsChart = new Chart(totalStepsCtx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: buildingData.map(([building]) => `Building ${building}`),
+                            datasets: [{
                                 label: 'Total Steps',
                                 data: buildingData.map(([_, steps]) => steps),
                                 backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length]),
-                                barThickness: barThickness,
-                                maxBarThickness: maxBarThickness,
-                                categoryPercentage: 0.8,
-                                barPercentage: 0.9,
-                                yAxisID: 'y',
-                                order: 2 // Draw bars first (behind line)
-                            },
-                            // Dataset 2: Line (Daily Per Participant Average)
-                            {
-                                label: 'Daily Per Participant',
-                                data: buildingData.map(([building]) => buildingStats[building].dailyPerParticipantAvg),
-                                type: 'line',
-                                borderColor: '#f97316', // Orange
-                                backgroundColor: '#f97316',
-                                borderWidth: 3,
-                                pointRadius: 6,
-                                pointHoverRadius: 8,
-                                pointBackgroundColor: '#f97316',
-                                pointBorderColor: '#FFFFFF',
-                                pointBorderWidth: 2,
-                                yAxisID: 'y1',
-                                order: 1 // Draw line on top
-                            }
-                        ]
-                    },
-                    options: {
-                        indexAxis: 'y', // Horizontal bars
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        interaction: {
-                            mode: 'index',
-                            intersect: false
+                                borderWidth: 0
+                            }]
                         },
-                        layout: {
-                            padding: {
-                                right: isMobile ? 50 : 80, // Space for outside text and line values
-                                left: 10
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'bottom',
-                                labels: {
-                                    usePointStyle: true,
-                                    padding: 15,
-                                    font: {
-                                        size: isMobile ? 10 : 12
-                                    },
-                                    generateLabels: function(chart) {
-                                        return [
-                                            {
-                                                text: 'Total Steps (bars)',
-                                                fillStyle: buildingColors[0],
-                                                strokeStyle: buildingColors[0],
-                                                pointStyle: 'rect'
-                                            },
-                                            {
-                                                text: 'Daily Per Participant (line)',
-                                                fillStyle: '#f97316',
-                                                strokeStyle: '#f97316',
-                                                pointStyle: 'circle'
-                                            }
-                                        ];
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `Total: ${context.parsed.y.toLocaleString()} steps`;
+                                        }
                                     }
                                 }
                             },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const building = buildingData[context.dataIndex][0];
-                                        const stats = buildingStats[building];
-                                        
-                                        if (context.dataset.label === 'Total Steps') {
-                                            return [
-                                                `Total Steps: ${stats.totalSteps.toLocaleString()}`,
-                                                `Participants: ${stats.participants}`,
-                                                `Daily Per Participant: ${stats.dailyPerParticipantAvg.toLocaleString()} steps/person/day`
-                                            ];
-                                        } else {
-                                            return `Daily Per Participant: ${stats.dailyPerParticipantAvg.toLocaleString()} steps/person/day`;
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value >= 1000 ? (value / 1000).toFixed(0) + 'K' : value;
+                                        }
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45,
+                                        font: {
+                                            size: 10
                                         }
                                     }
                                 }
                             }
+                        }
+                    });
+                    console.log('Total Steps chart created');
+                }
+                
+                // Chart 2: Participants per Building (Vertical)
+                const participantsCtx = document.getElementById('buildingParticipantsChart');
+                if (participantsCtx) {
+                    if (window.buildingParticipantsChart) window.buildingParticipantsChart.destroy();
+                    
+                    window.buildingParticipantsChart = new Chart(participantsCtx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: buildingData.map(([building]) => `Building ${building}`),
+                            datasets: [{
+                                label: 'Participants',
+                                data: buildingData.map(([building]) => buildingStats[building].participants),
+                                backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length]),
+                                borderWidth: 0
+                            }]
                         },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                position: 'bottom',
-                                title: {
-                                    display: !isMobile,
-                                    text: 'Total Steps',
-                                    font: {
-                                        size: 11
-                                    }
-                                },
-                                ticks: {
-                                    callback: function(value) {
-                                        return isMobile 
-                                            ? (value >= 1000 ? (value / 1000).toFixed(0) + 'K' : value)
-                                            : value.toLocaleString();
-                                    },
-                                    font: {
-                                        size: isMobile ? 9 : 10
-                                    }
-                                }
-                            },
-                            x1: {
-                                beginAtZero: true,
-                                position: 'top',
-                                display: !isMobile,
-                                title: {
-                                    display: true,
-                                    text: 'Daily Per Participant',
-                                    font: {
-                                        size: 11
-                                    },
-                                    color: '#f97316'
-                                },
-                                ticks: {
-                                    callback: function(value) {
-                                        return value.toLocaleString();
-                                    },
-                                    font: {
-                                        size: 10
-                                    },
-                                    color: '#f97316'
-                                },
-                                grid: {
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
                                     display: false
-                                }
-                            },
-                            y: {
-                                ticks: {
-                                    font: {
-                                        size: isMobile ? 11 : 12
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `Participants: ${context.parsed.y}`;
+                                        }
                                     }
                                 }
                             },
-                            y1: {
-                                display: false, // Hidden, just for data scaling
-                                beginAtZero: true
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1,
+                                        callback: function(value) {
+                                            return Math.floor(value) === value ? value : '';
+                                        }
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45,
+                                        font: {
+                                            size: 10
+                                        }
+                                    }
+                                }
                             }
                         }
-                    },
-                    plugins: [participantCountPlugin, totalStepsPlugin]
-                });
+                    });
+                    console.log('Participants chart created');
+                }
                 
-                console.log('Building chart created successfully (enhanced: bars + line + annotations)');
+                // Chart 3: Daily Per Participant Average (Vertical)
+                const dailyAvgCtx = document.getElementById('buildingDailyAvgChart');
+                if (dailyAvgCtx) {
+                    if (window.buildingDailyAvgChart) window.buildingDailyAvgChart.destroy();
+                    
+                    window.buildingDailyAvgChart = new Chart(dailyAvgCtx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: buildingData.map(([building]) => `Building ${building}`),
+                            datasets: [{
+                                label: 'Daily Per Participant Avg',
+                                data: buildingData.map(([building]) => buildingStats[building].dailyPerParticipantAvg),
+                                backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length]),
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `Daily Avg: ${context.parsed.y.toLocaleString()} steps/person/day`;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value.toLocaleString();
+                                        }
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45,
+                                        font: {
+                                            size: 10
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    console.log('Daily Average chart created');
+                }
+                
+                console.log('All 3 building charts created successfully (vertical bars)');
             } else {
                 console.log('No building data to display');
             }
+
 
             // Age chart
             const ageCtx = document.getElementById('ageChart').getContext('2d');
