@@ -450,10 +450,30 @@
                 </div>
 
                 <!-- Building Chart (Full Width) -->
+                <!-- Building Chart (Single Horizontal Bar Chart) -->
                 <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
                     <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">🏢 Building-wise Step Count</h2>
                     <div class="h-96 sm:h-96">
                         <canvas id="buildingChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Building Participant Count and Daily Average (Side by Side) -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+                    <!-- Participant Count Chart -->
+                    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                        <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">👥 Building-wise Participant Count</h2>
+                        <div class="h-64 sm:h-72">
+                            <canvas id="buildingParticipantChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Daily Average Per Participant Chart -->
+                    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                        <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">📊 Building-wise Daily Avg Per Person</h2>
+                        <div class="h-64 sm:h-72">
+                            <canvas id="buildingDailyAvgChart"></canvas>
+                        </div>
                     </div>
                 </div>
 
@@ -1362,110 +1382,268 @@
                 });
             }
 
-            // Building chart
+            // Building chart (single horizontal bar chart)
+            
+            // Generate distinct colors for each building
+            const buildingColors = [
+                '#3b82f6', // Blue
+                '#ef4444', // Red
+                '#10b981', // Green
+                '#f59e0b', // Amber
+                '#8b5cf6', // Violet
+                '#ec4899', // Pink
+                '#14b8a6', // Teal
+                '#f97316', // Orange
+            ];
+            
             const buildingCtx = document.getElementById('buildingChart');
             
-            // Debug: Check if canvas exists
             if (!buildingCtx) {
                 console.error('ERROR: buildingChart canvas element not found!');
-                return;
-            }
-            
-            const buildingContext = buildingCtx.getContext('2d');
-            if (buildingChart) buildingChart.destroy();
-            
-            if (buildingData.length > 0) {
-                // Generate distinct colors for each building
-                const buildingColors = [
-                    '#3b82f6', // Blue
-                    '#ef4444', // Red
-                    '#10b981', // Green
-                    '#f59e0b', // Amber
-                    '#8b5cf6', // Violet
-                    '#ec4899', // Pink
-                    '#14b8a6', // Teal
-                    '#f97316', // Orange
-                ];
+            } else {
+                const buildingContext = buildingCtx.getContext('2d');
+                if (buildingChart) buildingChart.destroy();
                 
-                console.log('Building chart data:', buildingData);
-                console.log('Building stats:', buildingStats);
-                
-                // No plugin - clean bars, all stats in tooltip only
-                
-                // Responsive bar thickness to avoid overlap on mobile
-                const isMobile = window.innerWidth < 576;
-                const isTablet = window.innerWidth >= 576 && window.innerWidth < 768;
-                
-                const barThickness = isMobile ? 30 : (isTablet ? 40 : 50);
-                const maxBarThickness = isMobile ? 35 : (isTablet ? 45 : 60);
-                
-                console.log(`Screen width: ${window.innerWidth}, Bar thickness: ${barThickness}`);
-                
-                buildingChart = new Chart(buildingContext, {
-                    type: 'bar',
-                    data: {
-                        labels: buildingData.map(([building]) => `Building ${building}`),
-                        datasets: [{
-                            label: 'Steps',
-                            data: buildingData.map(([_, steps]) => steps),
-                            backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length]),
-                            barThickness: barThickness,
-                            maxBarThickness: maxBarThickness,
-                            categoryPercentage: 0.8,  // Space between categories
-                            barPercentage: 0.9         // Width of bar within category
-                        }]
-                    },
-                    options: {
-                        indexAxis: 'y', // This makes it horizontal!
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        layout: {
-                            padding: {
-                                right: 20 // Extra space on right for labels
-                            }
+                if (buildingData.length > 0) {
+                    console.log('Building chart data:', buildingData);
+                    console.log('Building stats:', buildingStats);
+                    
+                    // Responsive bar thickness to avoid overlap on mobile
+                    const isMobile = window.innerWidth < 576;
+                    const isTablet = window.innerWidth >= 576 && window.innerWidth < 768;
+                    
+                    const barThickness = isMobile ? 30 : (isTablet ? 40 : 50);
+                    const maxBarThickness = isMobile ? 35 : (isTablet ? 45 : 60);
+                    
+                    console.log(`Screen width: ${window.innerWidth}, Bar thickness: ${barThickness}`);
+                    
+                    buildingChart = new Chart(buildingContext, {
+                        type: 'bar',
+                        data: {
+                            labels: buildingData.map(([building]) => `Building ${building}`),
+                            datasets: [{
+                                label: 'Total Steps',
+                                data: buildingData.map(([_, steps]) => steps),
+                                backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length]),
+                                barThickness: barThickness,
+                                maxBarThickness: maxBarThickness,
+                                categoryPercentage: 0.8,
+                                barPercentage: 0.9
+                            }]
                         },
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const building = buildingData[context.dataIndex][0];
-                                        const stats = buildingStats[building];
-                                        return [
-                                            `Total Steps: ${stats.totalSteps.toLocaleString()}`,
-                                            `Participants: ${stats.participants}`,
-                                            `Daily Per Participant: ${stats.dailyPerParticipantAvg.toLocaleString()} steps/person/day`
-                                        ];
-                                    }
+                        options: {
+                            indexAxis: 'y', // Horizontal bars
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            layout: {
+                                padding: {
+                                    right: 20
                                 }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return value.toLocaleString();
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const building = buildingData[context.dataIndex][0];
+                                            const stats = buildingStats[building];
+                                            return [
+                                                `Total Steps: ${stats.totalSteps.toLocaleString()}`,
+                                                `Participants: ${stats.participants}`,
+                                                `Daily Per Participant: ${stats.dailyPerParticipantAvg.toLocaleString()} steps/person/day`
+                                            ];
+                                        }
                                     }
                                 }
                             },
-                            y: {
-                                ticks: {
-                                    font: {
-                                        size: window.innerWidth < 576 ? 11 : 12
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value.toLocaleString();
+                                        }
+                                    }
+                                },
+                                y: {
+                                    ticks: {
+                                        font: {
+                                            size: window.innerWidth < 576 ? 11 : 12
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                });
-                
-                console.log('Building chart created successfully (horizontal, clean bars)');
-            } else {
-                console.log('No building data to display');
+                    });
+                    
+                    console.log('Building chart created successfully (horizontal, clean bars)');
+                } else {
+                    console.log('No building data to display');
+                }
             }
+
+            // Building Participant Count Chart (Vertical Bar Chart)
+            const buildingParticipantCtx = document.getElementById('buildingParticipantChart');
+            
+            if (!buildingParticipantCtx) {
+                console.error('ERROR: buildingParticipantChart canvas element not found!');
+            } else {
+                const buildingParticipantContext = buildingParticipantCtx.getContext('2d');
+                if (window.buildingParticipantChart) window.buildingParticipantChart.destroy();
+                
+                if (buildingData.length > 0) {
+                    console.log('Creating building participant count chart...');
+                    
+                    window.buildingParticipantChart = new Chart(buildingParticipantContext, {
+                        type: 'bar',
+                        data: {
+                            labels: buildingData.map(([building]) => `Building ${building}`),
+                            datasets: [{
+                                label: 'Participants',
+                                data: buildingData.map(([building]) => buildingStats[building].participants),
+                                backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length]),
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const building = buildingData[context.dataIndex][0];
+                                            const stats = buildingStats[building];
+                                            return [
+                                                `Participants: ${stats.participants}`,
+                                                `Total Steps: ${stats.totalSteps.toLocaleString()}`,
+                                                `Avg per Person: ${stats.participantAvgSteps.toLocaleString()} steps`
+                                            ];
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1,
+                                        callback: function(value) {
+                                            return Math.floor(value) === value ? value : '';
+                                        }
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Number of Participants',
+                                        font: {
+                                            size: 12
+                                        }
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45,
+                                        font: {
+                                            size: window.innerWidth < 576 ? 10 : 11
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    console.log('Building participant count chart created successfully (vertical bars)');
+                } else {
+                    console.log('No building data to display for participant chart');
+                }
+            }
+
+            // Building Daily Average Per Participant Chart (Vertical Bar Chart)
+            const buildingDailyAvgCtx = document.getElementById('buildingDailyAvgChart');
+            
+            if (!buildingDailyAvgCtx) {
+                console.error('ERROR: buildingDailyAvgChart canvas element not found!');
+            } else {
+                const buildingDailyAvgContext = buildingDailyAvgCtx.getContext('2d');
+                if (window.buildingDailyAvgChart) window.buildingDailyAvgChart.destroy();
+                
+                if (buildingData.length > 0) {
+                    console.log('Creating building daily average per participant chart...');
+                    
+                    window.buildingDailyAvgChart = new Chart(buildingDailyAvgContext, {
+                        type: 'bar',
+                        data: {
+                            labels: buildingData.map(([building]) => `Building ${building}`),
+                            datasets: [{
+                                label: 'Daily Avg Per Person',
+                                data: buildingData.map(([building]) => buildingStats[building].dailyPerParticipantAvg),
+                                backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length]),
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const building = buildingData[context.dataIndex][0];
+                                            const stats = buildingStats[building];
+                                            return [
+                                                `Daily Avg Per Person: ${stats.dailyPerParticipantAvg.toLocaleString()} steps/day`,
+                                                `Total Steps: ${stats.totalSteps.toLocaleString()}`,
+                                                `Participants: ${stats.participants}`,
+                                                `Total Days: ${Math.ceil((new Date() - new Date('2026-01-01')) / (1000 * 60 * 60 * 24)) + 1}`
+                                            ];
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value.toLocaleString();
+                                        }
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Steps per Person per Day',
+                                        font: {
+                                            size: 12
+                                        }
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45,
+                                        font: {
+                                            size: window.innerWidth < 576 ? 10 : 11
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    console.log('Building daily average per participant chart created successfully (vertical bars)');
+                } else {
+                    console.log('No building data to display for daily average chart');
+                }
+            }
+
 
             // Age chart
             const ageCtx = document.getElementById('ageChart').getContext('2d');
