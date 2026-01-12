@@ -461,9 +461,16 @@
                 <!-- Age and Gender Charts (Side by Side) -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
-                        <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Steps by Age Group</h2>
-                        <div class="h-64">
+                        <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">📊 Steps by Age Group & Gender</h2>
+                        
+                        <!-- Desktop: Grouped Bar Chart -->
+                        <div class="hidden md:block h-64">
                             <canvas id="ageChart"></canvas>
+                        </div>
+                        
+                        <!-- Mobile: Table with Progress Bars -->
+                        <div id="ageGenderTable" class="block md:hidden">
+                            <!-- Table will be generated dynamically -->
                         </div>
                     </div>
 
@@ -1174,6 +1181,13 @@
 
             let byAge = { 'Under 18': 0, '18-30': 0, '31-45': 0, '46-60': 0, 'Over 60': 0 };
             let byGender = { 'Male': 0, 'Female': 0, 'Other': 0 };
+            let byAgeGender = {
+                'Under 18': { 'Male': 0, 'Female': 0, 'Other': 0 },
+                '18-30': { 'Male': 0, 'Female': 0, 'Other': 0 },
+                '31-45': { 'Male': 0, 'Female': 0, 'Other': 0 },
+                '46-60': { 'Male': 0, 'Female': 0, 'Other': 0 },
+                'Over 60': { 'Male': 0, 'Female': 0, 'Other': 0 }
+            };
             let byBuilding = {}; // Track by building
             let buildingParticipants = {}; // Track unique participants per building
             let participantSteps = {}; // Track by unique key (name + flat)
@@ -1197,6 +1211,7 @@
                     const ageGroup = getAgeGroup(profile.age);
                     byAge[ageGroup] += entry.steps;
                     byGender[profile.gender] += entry.steps;
+                    byAgeGender[ageGroup][profile.gender] += entry.steps;
                     
                     // Extract building from flat number (first character)
                     const building = profile.flatNo.charAt(0).toUpperCase();
@@ -1235,7 +1250,7 @@
             loadLeaderboard();
 
             // Update charts
-            updateCharts(byAge, byGender, byBuilding, buildingParticipants, dailySteps);
+            updateCharts(byAge, byGender, byAgeGender, byBuilding, buildingParticipants, dailySteps);
             
             // Update fun stats
             const totalSteps = Object.values(participantSteps).reduce((sum, steps) => sum + steps, 0);
@@ -1243,7 +1258,7 @@
         }
 
         // Update charts
-        function updateCharts(byAge, byGender, byBuilding, buildingParticipants, dailySteps) {
+        function updateCharts(byAge, byGender, byAgeGender, byBuilding, buildingParticipants, dailySteps) {
             console.log('=== UPDATE CHARTS CALLED ===');
             console.log('Screen width:', window.innerWidth);
             console.log('Is mobile:', window.innerWidth < 768);
@@ -1611,34 +1626,78 @@
             }
 
 
-            // Age chart
+            // Age chart with gender split
             const ageCtxElement = document.getElementById('ageChart');
+            const ageGenderTableDiv = document.getElementById('ageGenderTable');
             console.log('Age chart element:', ageCtxElement);
+            console.log('Age gender table element:', ageGenderTableDiv);
             
-            if (!ageCtxElement) {
-                console.error('ERROR: ageChart canvas element not found!');
-            } else {
-                const ageCtx = ageCtxElement.getContext('2d');
-                if (ageChart) ageChart.destroy();
+            if (ageData.length > 0) {
+                // Prepare datasets for grouped bar chart (Male/Female side-by-side)
+                const ageGroups = ageData.map(([age]) => age);
+                const maleData = ageGroups.map(ageGroup => byAgeGender[ageGroup]['Male'] || 0);
+                const femaleData = ageGroups.map(ageGroup => byAgeGender[ageGroup]['Female'] || 0);
+                const otherData = ageGroups.map(ageGroup => byAgeGender[ageGroup]['Other'] || 0);
                 
-                if (ageData.length > 0) {
-                    console.log('Creating age chart with data:', ageData);
+                console.log('Age groups:', ageGroups);
+                console.log('Male data:', maleData);
+                console.log('Female data:', femaleData);
+                
+                // Desktop: Create grouped bar chart
+                if (ageCtxElement) {
+                    const ageCtx = ageCtxElement.getContext('2d');
+                    if (ageChart) ageChart.destroy();
+                    
+                    const datasets = [
+                        {
+                            label: '♂ Male',
+                            data: maleData,
+                            backgroundColor: '#3b82f6',
+                            borderWidth: 0
+                        },
+                        {
+                            label: '♀ Female',
+                            data: femaleData,
+                            backgroundColor: '#ec4899',
+                            borderWidth: 0
+                        }
+                    ];
+                    
+                    // Only add Other if there's data
+                    if (otherData.some(val => val > 0)) {
+                        datasets.push({
+                            label: 'Other',
+                            data: otherData,
+                            backgroundColor: '#8b5cf6',
+                            borderWidth: 0
+                        });
+                    }
+                    
                     ageChart = new Chart(ageCtx, {
                         type: 'bar',
                         data: {
-                            labels: ageData.map(([age]) => age),
-                            datasets: [{
-                                label: 'Steps',
-                                data: ageData.map(([_, steps]) => steps),
-                                backgroundColor: '#3b82f6'
-                            }]
+                            labels: ageGroups,
+                            datasets: datasets
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
                             plugins: {
                                 legend: {
-                                    display: false
+                                    display: true,
+                                    position: 'bottom'
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.dataset.label;
+                                            const value = context.parsed.y.toLocaleString();
+                                            const ageGroup = context.label;
+                                            const total = maleData[context.dataIndex] + femaleData[context.dataIndex] + otherData[context.dataIndex];
+                                            const percentage = total > 0 ? ((context.parsed.y / total) * 100).toFixed(0) : 0;
+                                            return `${label}: ${value} steps (${percentage}%)`;
+                                        }
+                                    }
                                 }
                             },
                             scales: {
@@ -1646,7 +1705,7 @@
                                     beginAtZero: true,
                                     ticks: {
                                         callback: function(value) {
-                                            return value.toLocaleString();
+                                            return value >= 1000 ? (value / 1000) + 'K' : value;
                                         }
                                     }
                                 },
@@ -1659,9 +1718,79 @@
                             }
                         }
                     });
-                    console.log('Age chart created successfully');
-                } else {
+                    console.log('Age chart with gender created successfully (grouped bars)');
+                }
+                
+                // Mobile: Create table with progress bars
+                if (ageGenderTableDiv) {
+                    let tableHTML = '<div class="space-y-3">';
+                    
+                    ageGroups.forEach((ageGroup, idx) => {
+                        const male = maleData[idx];
+                        const female = femaleData[idx];
+                        const other = otherData[idx];
+                        const total = male + female + other;
+                        
+                        if (total === 0) return; // Skip empty age groups
+                        
+                        const malePercent = total > 0 ? Math.round((male / total) * 100) : 0;
+                        const femalePercent = total > 0 ? Math.round((female / total) * 100) : 0;
+                        const otherPercent = total > 0 ? Math.round((other / total) * 100) : 0;
+                        
+                        tableHTML += `
+                            <div class="bg-white border rounded-lg p-3 shadow-sm">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h3 class="text-sm font-bold text-gray-900">${ageGroup}</h3>
+                                    <span class="text-xs text-gray-500">${total.toLocaleString()}</span>
+                                </div>
+                                
+                                <!-- Male -->
+                                <div class="mb-2">
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-gray-600">♂ Male</span>
+                                        <span class="font-bold text-gray-900">${male.toLocaleString()} (${malePercent}%)</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                        <div class="h-1.5 rounded-full bg-blue-500 transition-all duration-500" style="width: ${malePercent}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Female -->
+                                <div${other > 0 ? ' class="mb-2"' : ''}>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-gray-600">♀ Female</span>
+                                        <span class="font-bold text-gray-900">${female.toLocaleString()} (${femalePercent}%)</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                        <div class="h-1.5 rounded-full bg-pink-500 transition-all duration-500" style="width: ${femalePercent}%"></div>
+                                    </div>
+                                </div>
+                                ${other > 0 ? `
+                                <!-- Other -->
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-gray-600">Other</span>
+                                        <span class="font-bold text-gray-900">${other.toLocaleString()} (${otherPercent}%)</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                        <div class="h-1.5 rounded-full bg-purple-500 transition-all duration-500" style="width: ${otherPercent}%"></div>
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+                    
+                    tableHTML += '</div>';
+                    ageGenderTableDiv.innerHTML = tableHTML;
+                    console.log('Age gender table created successfully (mobile)');
+                }
+            } else {
+                if (ageCtxElement) {
                     console.log('No age data to display');
+                }
+                if (ageGenderTableDiv) {
+                    ageGenderTableDiv.innerHTML = '<p class="text-gray-500 text-center py-8 text-sm">No age data to display</p>';
                 }
             }
 
