@@ -7,27 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* One-time bounce animation that auto-stops */
         @keyframes bounceIn {
-            0% {
-                transform: scale(0.3);
-                opacity: 0;
-            }
-            50% {
-                transform: scale(1.05);
-            }
-            70% {
-                transform: scale(0.9);
-            }
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
         }
-        
-        .bounce-once {
-            animation: bounceIn 0.6s ease-out;
-        }
+        .bounce-once { animation: bounceIn 0.6s ease-out; }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-2 sm:p-4">
@@ -37,34 +23,19 @@
         </h1>
         <p class="text-center text-gray-600 mb-4 text-sm sm:text-base">Track your daily steps with your community</p>
 
-        <!-- Setup Notice -->
         <div id="setupNotice" class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
             <p class="text-xs sm:text-sm text-yellow-800">
                 ⚠️ <strong>Setup Required:</strong> Please update the SCRIPT_URL variable in this file with your Google Apps Script Web App URL.
             </p>
         </div>
 
-        <!-- Toggle between Register and Submit -->
         <div class="flex justify-center mb-6">
             <div class="bg-white rounded-lg shadow-md p-1 inline-flex w-full max-w-md">
-                <button
-                    id="btnSubmit"
-                    onclick="showView('submit')"
-                    class="flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors bg-blue-600 text-white text-sm sm:text-base"
-                >
-                    Submit Steps
-                </button>
-                <button
-                    id="btnRegister"
-                    onclick="showView('register')"
-                    class="flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors text-gray-600 hover:bg-gray-100 text-sm sm:text-base"
-                >
-                    Register
-                </button>
+                <button id="btnSubmit" onclick="showView('submit')" class="flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors bg-blue-600 text-white text-sm sm:text-base">Submit Steps</button>
+                <button id="btnRegister" onclick="showView('register')" class="flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors text-gray-600 hover:bg-gray-100 text-sm sm:text-base">Register</button>
             </div>
         </div>
 
-        <!-- Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 border-l-4 border-blue-500">
                 <h3 class="text-gray-600 text-xs sm:text-sm font-medium">Total Community Steps</h3>
@@ -76,7 +47,6 @@
             </div>
         </div>
 
-        <!-- 10 Million Goal Progress -->
         <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-sm sm:text-base md:text-lg font-bold text-gray-800">🎯 Goal: 10M Steps</h3>
@@ -91,46 +61,34 @@
             </div>
         </div>
 
-        <!-- Fun Stats Section -->
         <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
             <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">🎯 We've Walked:</h3>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-                <!-- Distance -->
                 <div class="bg-blue-50 rounded-lg p-3 sm:p-4 border border-blue-100">
                     <div class="text-xl sm:text-2xl mb-1">🌍</div>
                     <div id="statDistance" class="text-lg sm:text-2xl font-bold text-blue-600 mb-1">0 km</div>
                     <div class="text-xs sm:text-sm text-gray-600">Distance Covered</div>
                 </div>
-                
-                <!-- Society Loops -->
                 <div class="bg-purple-50 rounded-lg p-3 sm:p-4 border border-purple-100">
                     <div class="text-xl sm:text-2xl mb-1">🏘️</div>
                     <div id="statLoops" class="text-lg sm:text-2xl font-bold text-purple-600 mb-1">0</div>
                     <div class="text-xs sm:text-sm text-gray-600">Loops of Apostrophe</div>
                 </div>
-                
-                <!-- India Journey -->
                 <div class="bg-orange-50 rounded-lg p-3 sm:p-4 border border-orange-100">
                     <div class="text-xl sm:text-2xl mb-1">🇮🇳</div>
                     <div id="statIndia" class="text-lg sm:text-2xl font-bold text-orange-600 mb-1">0%</div>
                     <div class="text-xs sm:text-sm text-gray-600">Mumbai → Delhi</div>
                 </div>
-                
-                <!-- Calories -->
                 <div class="bg-red-50 rounded-lg p-3 sm:p-4 border border-red-100">
                     <div class="text-xl sm:text-2xl mb-1">🔥</div>
                     <div id="statCalories" class="text-lg sm:text-2xl font-bold text-red-600 mb-1">0</div>
                     <div class="text-xs sm:text-sm text-gray-600">Calories Burned</div>
                 </div>
-                
-                <!-- Trees Planted -->
                 <div class="bg-green-50 rounded-lg p-3 sm:p-4 border border-green-100">
                     <div class="text-xl sm:text-2xl mb-1">🌳</div>
                     <div id="statTrees" class="text-lg sm:text-2xl font-bold text-green-600 mb-1">0</div>
                     <div class="text-xs sm:text-sm text-gray-600">Trees Equivalent</div>
                 </div>
-                
-                <!-- To Space -->
                 <div class="bg-indigo-50 rounded-lg p-3 sm:p-4 border border-indigo-100">
                     <div class="text-xl sm:text-2xl mb-1">🚀</div>
                     <div id="statSpace" class="text-lg sm:text-2xl font-bold text-indigo-600 mb-1">0×</div>
@@ -139,7 +97,6 @@
             </div>
         </div>
 
-        <!-- Loading Indicator -->
         <div id="loadingIndicator" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div class="bg-white rounded-lg p-4 sm:p-6 flex items-center gap-3 mx-4">
                 <div class="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600"></div>
@@ -147,25 +104,18 @@
             </div>
         </div>
 
-        <!-- Milestone Celebration Modal -->
         <div id="milestoneModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div id="milestoneCard" class="bg-white rounded-lg shadow-2xl p-6 sm:p-8 max-w-md mx-4 text-center">
                 <div id="milestoneIcon" class="text-6xl sm:text-8xl mb-4">🎉</div>
                 <h2 id="milestoneTitle" class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Milestone Reached!</h2>
                 <p id="milestoneMessage" class="text-base sm:text-lg text-gray-600 mb-4"></p>
-                <div id="milestoneStats" class="bg-blue-50 rounded-lg p-4 mb-6 text-left">
-                    <!-- Stats will be inserted here -->
-                </div>
-                <button
-                    onclick="closeMilestone()"
-                    class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-6 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all font-semibold text-lg"
-                >
+                <div id="milestoneStats" class="bg-blue-50 rounded-lg p-4 mb-6 text-left"></div>
+                <button onclick="closeMilestone()" class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-6 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all font-semibold text-lg">
                     🎊 Awesome! Keep Walking!
                 </button>
             </div>
         </div>
 
-        <!-- Registration Form -->
         <div id="registerView" class="hidden">
             <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 mb-4 sm:mb-6">
                 <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">New User Registration</h2>
@@ -173,52 +123,20 @@
                 <form id="registerForm" class="space-y-3 sm:space-y-4" onsubmit="handleRegister(event)">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Full Name *
-                            </label>
-                            <input
-                                type="text"
-                                id="regName"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="e.g., Ajay Kumar"
-                                required
-                            />
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                            <input type="text" id="regName" class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Ajay Kumar" required/>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Flat Number *
-                            </label>
-                            <input
-                                type="text"
-                                id="regFlatNo"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="e.g., A-101"
-                                required
-                            />
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Flat Number *</label>
+                            <input type="text" id="regFlatNo" class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., A-101" required/>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Age *
-                            </label>
-                            <input
-                                type="number"
-                                id="regAge"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="e.g., 35"
-                                min="1"
-                                max="120"
-                                required
-                            />
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Age *</label>
+                            <input type="number" id="regAge" class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 35" min="1" max="120" required/>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Gender *
-                            </label>
-                            <select
-                                id="regGender"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            >
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Gender *</label>
+                            <select id="regGender" class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                                 <option value="">Select gender</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
@@ -226,17 +144,11 @@
                             </select>
                         </div>
                     </div>
-                    <button
-                        type="submit"
-                        class="w-full bg-blue-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg"
-                    >
-                        Register
-                    </button>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg">Register</button>
                 </form>
                 <p id="registerStatus" class="text-sm mt-4 text-center"></p>
             </div>
 
-            <!-- Registered Users List -->
             <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6">
                 <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Registered Participants</h2>
                 <div id="registeredList" class="space-y-2 max-h-96 overflow-y-auto">
@@ -245,144 +157,77 @@
             </div>
         </div>
 
-        <!-- Submit Steps Form -->
         <div id="submitView">
             <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 mb-4 sm:mb-6">
                 <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">Submit Your Steps</h2>
                 
-                <!-- Important Notice -->
                 <div class="bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 mb-4 rounded">
                     <p class="text-sm sm:text-base text-blue-800">
-                        <strong>💡 Important:</strong> Submit only your <strong>FINAL step count</strong> for the day. 
-                        You can only submit <strong>once per day</strong>.
+                        <strong>💡 Important:</strong> Submit only your <strong>FINAL step count</strong> for the day. You can only submit <strong>once per day</strong>.
                     </p>
                 </div>
                 
                 <form id="submitForm" class="space-y-3 sm:space-y-4" onsubmit="handleSubmitSteps(event)">
                     <div class="grid grid-cols-1 gap-3 sm:gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Date *
-                            </label>
-                            <input
-                                type="date"
-                                id="submitDate"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                                onchange="checkExistingEntry()"
-                            />
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                            <input type="date" id="submitDate" class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required onchange="checkExistingEntry()"/>
                             <p class="text-xs text-gray-500 mt-1">💡 Select from Jan 1, 2026 onwards</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Select Your Name & Flat *
-                            </label>
-                            <select
-                                id="participantSelect"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                                onchange="checkExistingEntry()"
-                            >
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Select Your Name & Flat *</label>
+                            <select id="participantSelect" class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required onchange="checkExistingEntry()">
                                 <option value="">-- Select from registered participants --</option>
                             </select>
                             <p class="text-xs text-gray-500 mt-1">💡 Don't see your name? <a href="#" onclick="showView('register'); return false;" class="text-blue-600 hover:underline font-medium">Register here</a></p>
                         </div>
                         
-                        <!-- Existing Entry Warning (Hidden by default) -->
                         <div id="existingEntryWarning" class="hidden">
                             <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 sm:p-4 rounded">
                                 <div class="flex items-start">
-                                    <div class="flex-shrink-0">
-                                        <span class="text-2xl">⚠️</span>
-                                    </div>
+                                    <div class="flex-shrink-0"><span class="text-2xl">⚠️</span></div>
                                     <div class="ml-3 flex-1">
                                         <h3 class="text-sm sm:text-base font-bold text-yellow-800 mb-2">ALREADY SUBMITTED</h3>
                                         <div id="existingEntryDetails" class="text-xs sm:text-sm text-yellow-700 mb-2"></div>
-                                        <p class="text-xs sm:text-sm text-yellow-800">
-                                            ✅ This entry is locked. Please select a different date or verify you selected the correct name.
-                                        </p>
+                                        <p class="text-xs sm:text-sm text-yellow-800">✅ This entry is locked. Please select a different date or verify you selected the correct name.</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Steps *
-                            </label>
-                            <input
-                                type="number"
-                                id="submitSteps"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="e.g., 10000"
-                                min="0"
-                                required
-                            />
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Steps *</label>
+                            <input type="number" id="submitSteps" class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 10000" min="0" required/>
                         </div>
                     </div>
-                    <button
-                        type="submit"
-                        id="submitButton"
-                        class="w-full bg-blue-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg"
-                    >
-                        Submit Steps
-                    </button>
+                    <button type="submit" id="submitButton" class="w-full bg-blue-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg">Submit Steps</button>
                 </form>
                 <p id="submitStatus" class="text-sm mt-4 text-center"></p>
             </div>
 
-            <!-- Toggle Dashboard -->
-            <button
-                onclick="toggleDashboard()"
-                id="toggleBtn"
-                class="w-full bg-indigo-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg hover:bg-indigo-700 transition-colors font-semibold mb-4 sm:mb-6 text-base sm:text-lg"
-            >
+            <button onclick="toggleDashboard()" id="toggleBtn" class="w-full bg-indigo-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg hover:bg-indigo-700 transition-colors font-semibold mb-4 sm:mb-6 text-base sm:text-lg">
                 ▼ View Community Dashboard
             </button>
 
-            <!-- Dashboard -->
             <div id="dashboard" class="hidden space-y-4 sm:space-y-6">
-                <!-- Daily Steps Trend -->
                 <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
                     <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">📈 Daily Community Steps</h2>
-                    <div class="h-64 sm:h-80">
-                        <canvas id="dailyStepsChart"></canvas>
-                    </div>
+                    <div class="h-64 sm:h-80"><canvas id="dailyStepsChart"></canvas></div>
                 </div>
 
-                <!-- Participant Leaderboard with Tabs -->
                 <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
                     <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">🏆 Participant Leaderboard</h2>
                     
-                    <!-- Tabs -->
                     <div class="flex border-b border-gray-200 mb-4">
-                        <button
-                            id="cumulativeTab"
-                            onclick="switchLeaderboardTab('cumulative')"
-                            class="px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 border-blue-600 text-blue-600"
-                        >
-                            Cumulative
-                        </button>
-                        <button
-                            id="daywiseTab"
-                            onclick="switchLeaderboardTab('daywise')"
-                            class="px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 border-transparent text-gray-600 hover:text-gray-800"
-                        >
-                            Day-wise
-                        </button>
+                        <button id="cumulativeTab" onclick="switchLeaderboardTab('cumulative')" class="px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 border-blue-600 text-blue-600">Cumulative</button>
+                        <button id="daywiseTab" onclick="switchLeaderboardTab('daywise')" class="px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 border-transparent text-gray-600 hover:text-gray-800">Day-wise</button>
                     </div>
 
-                    <!-- Cumulative View -->
                     <div id="cumulativeView">
-                        <!-- Sort and Filter Options -->
                         <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4">
                             <div class="flex-1">
                                 <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Sort by:</label>
-                                <select
-                                    id="sortBy"
-                                    onchange="loadLeaderboard()"
-                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
+                                <select id="sortBy" onchange="loadLeaderboard()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="steps">Total Steps (High to Low)</option>
                                     <option value="name">Name (A-Z)</option>
                                     <option value="flat">Flat Number</option>
@@ -390,110 +235,50 @@
                             </div>
                             <div class="flex-1">
                                 <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Search:</label>
-                                <input
-                                    type="text"
-                                    id="searchParticipant"
-                                    onkeyup="loadLeaderboard()"
-                                    placeholder="Search by name or flat..."
-                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
+                                <input type="text" id="searchParticipant" onkeyup="loadLeaderboard()" placeholder="Search by name or flat..." class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"/>
                             </div>
                         </div>
 
-                        <!-- All Participants List -->
                         <div id="allParticipants" class="space-y-2 max-h-96 overflow-y-auto">
                             <p class="text-gray-500 text-center py-4 text-sm sm:text-base">Loading...</p>
                         </div>
-                        
                         <p id="participantCount" class="text-xs sm:text-sm text-gray-600 mt-3 text-center"></p>
                     </div>
 
-                    <!-- Day-wise View -->
                     <div id="daywiseView" class="hidden">
-                        <!-- Participant Selector -->
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Select Participant:</label>
-                            <select
-                                id="daywiseParticipantSelect"
-                                onchange="loadDaywiseData()"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
+                            <select id="daywiseParticipantSelect" onchange="loadDaywiseData()" class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="">-- Select a participant --</option>
                             </select>
                         </div>
 
-                        <!-- Day-wise Data Display -->
                         <div id="daywiseData">
                             <p class="text-gray-500 text-center py-8 text-sm sm:text-base">Select a participant to see their daily breakdown</p>
                         </div>
 
-                        <!-- Navigation -->
                         <div class="flex justify-between mt-4">
-                            <button
-                                id="prevParticipant"
-                                onclick="navigateParticipant(-1)"
-                                class="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled
-                            >
-                                ⬅️ Previous
-                            </button>
-                            <button
-                                id="nextParticipant"
-                                onclick="navigateParticipant(1)"
-                                class="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled
-                            >
-                                Next ➡️
-                            </button>
+                            <button id="prevParticipant" onclick="navigateParticipant(-1)" class="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>⬅️ Previous</button>
+                            <button id="nextParticipant" onclick="navigateParticipant(1)" class="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>Next ➡️</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Building Chart (Full Width) -->
-                <!-- Building Charts (3 separate vertical bar charts) -->
                 <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
                     <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">🏢 Building Statistics</h2>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                        <!-- Chart 1: Total Steps -->
-                        <div>
-                            <h3 class="text-sm sm:text-base font-semibold text-gray-700 mb-2 text-center">Total Steps</h3>
-                            <div class="h-64 sm:h-72">
-                                <canvas id="buildingTotalStepsChart"></canvas>
-                            </div>
-                        </div>
-                        
-                        <!-- Chart 2: Participants -->
-                        <div>
-                            <h3 class="text-sm sm:text-base font-semibold text-gray-700 mb-2 text-center">Participants</h3>
-                            <div class="h-64 sm:h-72">
-                                <canvas id="buildingParticipantsChart"></canvas>
-                            </div>
-                        </div>
-                        
-                        <!-- Chart 3: Daily Per Participant Average -->
-                        <div>
-                            <h3 class="text-sm sm:text-base font-semibold text-gray-700 mb-2 text-center">Daily Per Participant Avg</h3>
-                            <div class="h-64 sm:h-72">
-                                <canvas id="buildingDailyAvgChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="buildingStatsTable" class="overflow-x-auto"></div>
                 </div>
 
-                <!-- Age and Gender Charts (Side by Side) -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
-                        <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Steps by Age Group</h2>
-                        <div class="h-64">
-                            <canvas id="ageChart"></canvas>
-                        </div>
+                        <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">📊 Steps by Age Group & Gender</h2>
+                        <div class="hidden md:block h-64"><canvas id="ageChart"></canvas></div>
+                        <div id="ageGenderTable" class="block md:hidden"></div>
                     </div>
 
                     <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
                         <h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Steps by Gender</h2>
-                        <div class="h-64">
-                            <canvas id="genderChart"></canvas>
-                        </div>
+                        <div class="h-64"><canvas id="genderChart"></canvas></div>
                     </div>
                 </div>
             </div>
@@ -501,28 +286,18 @@
     </div>
 
     <script>
-        // ⚠️ IMPORTANT: Replace this URL with your Google Apps Script Web App URL
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdAp6QU0QXqnf2h3C6EikTf5NMOBBt73q9RJKmhLK9gHufKjevrzHHjkHvqy2Mtrvg/exec';
+        let ageChart = null, genderChart = null, buildingChart = null, dailyStepsChart = null, cachedData = null;
+        const GOAL_STEPS = 10000000;
 
-        let ageChart = null;
-        let genderChart = null;
-        let buildingChart = null;
-        let dailyStepsChart = null;
-        let cachedData = null;
-
-        const GOAL_STEPS = 10000000; // 10 million steps goal
-
-        // Helper function to create unique key from name and flat number
         function createUniqueKey(name, flatNo) {
             return (name.toUpperCase().trim() + '_' + flatNo).replace(/\s+/g, '_');
         }
 
-        // Show/hide loading indicator
         function showLoading(show) {
             document.getElementById('loadingIndicator').classList.toggle('hidden', !show);
         }
 
-        // Show view
         function showView(view) {
             if (view === 'register') {
                 document.getElementById('registerView').classList.remove('hidden');
@@ -538,12 +313,10 @@
             }
         }
 
-        // Fetch data from Google Sheets
         async function fetchData() {
             try {
                 const response = await fetch(SCRIPT_URL);
                 const data = await response.json();
-                
                 if (data.success) {
                     cachedData = data;
                     return data;
@@ -557,56 +330,36 @@
             }
         }
 
-        // Send data to Google Sheets
         async function sendData(action, payload) {
             try {
                 showLoading(true);
-                
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain',
-                    },
-                    body: JSON.stringify({
-                        action: action,
-                        ...payload
-                    })
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action: action, ...payload })
                 });
-                
                 const data = await response.json();
                 showLoading(false);
-                
                 return data;
             } catch (error) {
                 showLoading(false);
                 console.error('Error sending data:', error);
-                return {
-                    success: false,
-                    message: 'Error connecting to server. Please try again.'
-                };
+                return { success: false, message: 'Error connecting to server. Please try again.' };
             }
         }
 
-        // Handle registration
         async function handleRegister(event) {
             event.preventDefault();
-            
             const name = document.getElementById('regName').value.trim();
             const flatNo = document.getElementById('regFlatNo').value.trim().toUpperCase();
             const age = parseInt(document.getElementById('regAge').value);
             const gender = document.getElementById('regGender').value;
             
-            const result = await sendData('register', {
-                name: name,
-                flatNo: flatNo,
-                age: age,
-                gender: gender
-            });
+            const result = await sendData('register', { name, flatNo, age, gender });
             
             if (result.success) {
                 showStatus('registerStatus', result.message + ' 🎉', 'success');
                 document.getElementById('registerForm').reset();
-                
                 setTimeout(async () => {
                     await loadData();
                     showView('submit');
@@ -617,7 +370,6 @@
             }
         }
 
-        // Check if user already has entry for selected date
         function checkExistingEntry() {
             const dateInput = document.getElementById('submitDate');
             const participantSelect = document.getElementById('participantSelect');
@@ -629,1187 +381,10 @@
             const selectedDate = dateInput.value;
             const selectedValue = participantSelect.value;
             
-            // Reset if either is not selected
             if (!selectedDate || !selectedValue) {
                 warningDiv.classList.add('hidden');
                 stepsInput.disabled = false;
                 stepsInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
                 submitButton.disabled = false;
                 submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                return;
-            }
-            
-            const [uniqueKey, name, flatNo] = selectedValue.split('|');
-            
-            // Check if this person has entry for this date
-            if (!cachedData || !cachedData.steps) return;
-            
-            const existing = cachedData.steps.find(entry => {
-                const entryKey = entry.uniqueKey || createUniqueKey(entry.name, entry.flatNo);
-                const entryDate = typeof entry.date === 'string' ? entry.date.split('T')[0] : entry.date.toISOString().split('T')[0];
-                return entryKey === uniqueKey && entryDate === selectedDate;
-            });
-            
-            if (existing) {
-                // Show warning and disable form
-                const [year, month, day] = selectedDate.split('-');
-                const d = new Date(year, month - 1, day);
-                const formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                
-                detailsDiv.innerHTML = `
-                    <p class="font-semibold">${name} already submitted ${existing.steps.toLocaleString()} steps for ${formattedDate}</p>
-                `;
-                
-                warningDiv.classList.remove('hidden');
-                
-                // Disable steps input and submit button
-                stepsInput.disabled = true;
-                stepsInput.value = '';
-                stepsInput.classList.add('bg-gray-100', 'cursor-not-allowed');
-                
-                submitButton.disabled = true;
-                submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
-                submitButton.textContent = '🔒 Already Submitted';
-            } else {
-                // Hide warning and enable form
-                warningDiv.classList.add('hidden');
-                
-                stepsInput.disabled = false;
-                stepsInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
-                
-                submitButton.disabled = false;
-                submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                submitButton.textContent = 'Submit Steps';
-            }
-        }
-
-        // Handle submit steps
-        async function handleSubmitSteps(event) {
-            event.preventDefault();
-            
-            const selectedDate = document.getElementById('submitDate').value;
-            const selectedValue = document.getElementById('participantSelect').value;
-            const steps = parseInt(document.getElementById('submitSteps').value);
-            
-            // Parse dates as local dates to avoid timezone issues
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            // Parse the selected date as local date (not UTC)
-            const [year, month, day] = selectedDate.split('-').map(Number);
-            const submitDate = new Date(year, month - 1, day);
-            submitDate.setHours(0, 0, 0, 0);
-            
-            const minDate = new Date(2026, 0, 1); // Jan 1, 2026 in local time
-            minDate.setHours(0, 0, 0, 0);
-            
-            if (submitDate > today) {
-                showStatus('submitStatus', '❌ Cannot submit steps for future dates!', 'error');
-                return;
-            }
-            
-            if (submitDate < minDate) {
-                showStatus('submitStatus', '❌ Date must be January 1, 2026 or later!', 'error');
-                return;
-            }
-            
-            if (!selectedValue) {
-                showStatus('submitStatus', 'Please select your name from the dropdown', 'error');
-                return;
-            }
-            
-            // Parse the selected value (format: "uniqueKey|Name|FlatNo")
-            const [uniqueKey, name, flatNo] = selectedValue.split('|');
-            
-            const result = await sendData('submitSteps', {
-                date: selectedDate,
-                name: name,
-                flatNo: flatNo,
-                steps: steps
-            });
-            
-            if (result.success) {
-                showStatus('submitStatus', result.message + ' 🎉', 'success');
-                document.getElementById('submitForm').reset();
-                setDefaultDate(); // Reset date to today
-                
-                setTimeout(async () => {
-                    await loadData();
-                    document.getElementById('submitStatus').textContent = '';
-                }, 2000);
-            } else {
-                showStatus('submitStatus', result.message, 'error');
-            }
-        }
-
-        // Show status message
-        function showStatus(elementId, message, type) {
-            const element = document.getElementById(elementId);
-            element.textContent = message;
-            element.className = `text-sm mt-4 text-center ${type === 'success' ? 'text-green-600' : 'text-red-600'}`;
-        }
-
-        // Get age group
-        function getAgeGroup(age) {
-            if (age < 18) return 'Under 18';
-            if (age <= 30) return '18-30';
-            if (age <= 45) return '31-45';
-            if (age <= 60) return '46-60';
-            return 'Over 60';
-        }
-
-        // Set default date to today
-        function setDefaultDate() {
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            const todayStr = `${yyyy}-${mm}-${dd}`;
-            
-            const dateInput = document.getElementById('submitDate');
-            if (dateInput) {
-                dateInput.value = todayStr;
-                dateInput.max = todayStr; // Prevent selecting future dates
-                dateInput.min = '2026-01-01'; // Minimum date is Jan 1, 2026
-            }
-        }
-
-        // Load all data
-        async function loadData() {
-            const data = await fetchData();
-            if (data) {
-                updateStats(data);
-            }
-        }
-
-        // Update stats
-        function updateStats(data) {
-            const totalSteps = data.steps.reduce((sum, entry) => sum + entry.steps, 0);
-            
-            document.getElementById('totalSteps').textContent = totalSteps.toLocaleString();
-            document.getElementById('totalParticipants').textContent = data.profiles.length;
-            
-            // Update goal progress
-            const percentage = Math.min(100, (totalSteps / GOAL_STEPS) * 100);
-            const remaining = Math.max(0, GOAL_STEPS - totalSteps);
-            
-            document.getElementById('goalPercentage').textContent = percentage.toFixed(1) + '%';
-            document.getElementById('goalProgress').style.width = percentage + '%';
-            document.getElementById('goalCurrent').textContent = totalSteps.toLocaleString() + ' steps';
-            document.getElementById('goalRemaining').textContent = remaining.toLocaleString() + ' to go!';
-            
-            // Update fun stats
-            updateFunStats(totalSteps);
-            
-            // Check for milestone celebrations
-            checkMilestones(totalSteps);
-            
-            // Add celebration if goal reached
-            if (totalSteps >= GOAL_STEPS) {
-                document.getElementById('goalRemaining').textContent = '🎉 Goal Achieved! 🎉';
-                document.getElementById('goalRemaining').className = 'text-green-600 font-bold';
-            }
-            
-            // Update participant dropdown
-            populateParticipantDropdown(data.profiles);
-        }
-
-        // Populate dropdown with registered participants
-        function populateParticipantDropdown(profiles) {
-            const select = document.getElementById('participantSelect');
-            
-            // Clear existing options except the first placeholder
-            select.innerHTML = '<option value="">-- Select from registered participants --</option>';
-            
-            // Sort profiles alphabetically by name
-            const sortedProfiles = [...profiles].sort((a, b) => a.name.localeCompare(b.name));
-            
-            // Add option for each registered participant
-            sortedProfiles.forEach(profile => {
-                const option = document.createElement('option');
-                const uniqueKey = profile.uniqueKey || createUniqueKey(profile.name, profile.flatNo);
-                
-                // Value format: "uniqueKey|Name|FlatNo"
-                option.value = `${uniqueKey}|${profile.name}|${profile.flatNo}`;
-                
-                // Display format: "Name (Flat No)"
-                option.textContent = `${profile.name} (${profile.flatNo})`;
-                
-                select.appendChild(option);
-            });
-        }
-
-        // Load leaderboard (all participants with sort and filter)
-        function loadLeaderboard() {
-            if (!window.dashboardData) return;
-            
-            const { participantSteps, profileMap, steps } = window.dashboardData;
-            
-            // Get all participants
-            let allParticipants = Object.entries(participantSteps)
-                .map(([uniqueKey, totalSteps]) => {
-                    const completion = calculateCompletion(uniqueKey, steps);
-                    return {
-                        uniqueKey: uniqueKey,
-                        flatNo: profileMap[uniqueKey]?.flatNo || 'Unknown',
-                        name: profileMap[uniqueKey]?.name || 'Unknown',
-                        steps: totalSteps,
-                        ...completion
-                    };
-                });
-            
-            // Apply search filter
-            const searchTerm = document.getElementById('searchParticipant')?.value.toLowerCase() || '';
-            if (searchTerm) {
-                allParticipants = allParticipants.filter(p => 
-                    p.name.toLowerCase().includes(searchTerm) || 
-                    p.flatNo.toLowerCase().includes(searchTerm)
-                );
-            }
-            
-            // Apply sorting
-            const sortBy = document.getElementById('sortBy')?.value || 'steps';
-            if (sortBy === 'steps') {
-                allParticipants.sort((a, b) => b.steps - a.steps);
-            } else if (sortBy === 'name') {
-                allParticipants.sort((a, b) => a.name.localeCompare(b.name));
-            } else if (sortBy === 'flat') {
-                allParticipants.sort((a, b) => a.flatNo.localeCompare(b.flatNo));
-            }
-            
-            // Generate HTML
-            const leaderboardHtml = allParticipants.length > 0
-                ? allParticipants.map((entry, idx) => `
-                    <div class="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                        <div class="flex items-center gap-2 sm:gap-4 flex-1">
-                            <span class="text-sm sm:text-lg font-bold text-gray-400 w-5 sm:w-8">#${idx + 1}</span>
-                            <div class="flex-1">
-                                <p class="font-semibold text-gray-800 text-sm sm:text-base">${entry.name}</p>
-                                <p class="text-xs sm:text-sm text-gray-600">Flat ${entry.flatNo}</p>
-                                <div class="mt-1 flex items-center gap-2">
-                                    <span class="text-lg">${entry.statusIcon}</span>
-                                    <span class="text-xs sm:text-sm ${entry.statusColor} font-medium">
-                                        ${entry.daysSubmitted}/${entry.totalDays} days
-                                    </span>
-                                    <span class="text-xs text-gray-500">(${entry.percentage}%)</span>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="text-base sm:text-xl font-bold text-blue-600">${entry.steps.toLocaleString()}</p>
-                    </div>
-                `).join('')
-                : '<p class="text-gray-500 text-center py-4 text-sm sm:text-base">No participants found</p>';
-            
-            document.getElementById('allParticipants').innerHTML = leaderboardHtml;
-            document.getElementById('participantCount').textContent = 
-                `Showing ${allParticipants.length} participant${allParticipants.length !== 1 ? 's' : ''}`;
-            
-            // Populate day-wise dropdown
-            populateDaywiseDropdown(allParticipants);
-        }
-
-        // Calculate completion percentage and missing days
-        function calculateCompletion(uniqueKey, allSteps) {
-            // Get date range (Jan 1 to today)
-            const startDate = new Date('2026-01-01');
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            // Generate all dates from start to today
-            const allDates = [];
-            let currentDate = new Date(startDate);
-            while (currentDate <= today) {
-                allDates.push(currentDate.toISOString().split('T')[0]);
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-            
-            // Get dates when user submitted steps
-            const userSteps = allSteps.filter(s => {
-                const stepKey = s.uniqueKey || createUniqueKey(s.name, s.flatNo);
-                return stepKey === uniqueKey;
-            });
-            
-            const submittedDates = new Set(
-                userSteps.map(s => {
-                    // Handle both Date objects and string dates
-                    const dateStr = s.date instanceof Date 
-                        ? s.date.toISOString().split('T')[0]
-                        : (typeof s.date === 'string' ? s.date.split('T')[0] : s.date);
-                    return dateStr;
-                })
-            );
-            
-            const totalDays = allDates.length;
-            const daysSubmitted = submittedDates.size;
-            const daysMissing = totalDays - daysSubmitted;
-            const percentage = totalDays > 0 ? Math.round((daysSubmitted / totalDays) * 100) : 0;
-            
-            // Determine status
-            let statusIcon, statusColor, statusText;
-            if (percentage >= 90) {
-                statusIcon = '✅';
-                statusColor = 'text-green-600';
-                statusText = 'Perfect!';
-            } else if (percentage >= 70) {
-                statusIcon = '✅';
-                statusColor = 'text-green-600';
-                statusText = 'Great!';
-            } else if (percentage >= 50) {
-                statusIcon = '⚠️';
-                statusColor = 'text-yellow-600';
-                statusText = 'Good';
-            } else if (percentage >= 30) {
-                statusIcon = '⚠️';
-                statusColor = 'text-orange-600';
-                statusText = 'Need push!';
-            } else {
-                statusIcon = '❌';
-                statusColor = 'text-red-600';
-                statusText = 'Come back!';
-            }
-            
-            return {
-                totalDays,
-                daysSubmitted,
-                daysMissing,
-                percentage,
-                statusIcon,
-                statusColor,
-                statusText
-            };
-        }
-
-        // Switch between cumulative and day-wise tabs
-        function switchLeaderboardTab(tab) {
-            const cumulativeTab = document.getElementById('cumulativeTab');
-            const daywiseTab = document.getElementById('daywiseTab');
-            const cumulativeView = document.getElementById('cumulativeView');
-            const daywiseView = document.getElementById('daywiseView');
-            
-            if (tab === 'cumulative') {
-                cumulativeTab.className = 'px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 border-blue-600 text-blue-600';
-                daywiseTab.className = 'px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 border-transparent text-gray-600 hover:text-gray-800';
-                cumulativeView.classList.remove('hidden');
-                daywiseView.classList.add('hidden');
-            } else {
-                cumulativeTab.className = 'px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 border-transparent text-gray-600 hover:text-gray-800';
-                daywiseTab.className = 'px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 border-blue-600 text-blue-600';
-                cumulativeView.classList.add('hidden');
-                daywiseView.classList.remove('hidden');
-            }
-        }
-
-        // Populate day-wise participant dropdown
-        function populateDaywiseDropdown(allParticipants) {
-            const select = document.getElementById('daywiseParticipantSelect');
-            if (!select) return;
-            
-            // Sort by name for dropdown
-            const sorted = [...allParticipants].sort((a, b) => a.name.localeCompare(b.name));
-            
-            select.innerHTML = '<option value="">-- Select a participant --</option>' +
-                sorted.map(p => 
-                    `<option value="${p.uniqueKey}">${p.name} (${p.flatNo})</option>`
-                ).join('');
-        }
-
-        // Load day-wise data for selected participant
-        function loadDaywiseData() {
-            const select = document.getElementById('daywiseParticipantSelect');
-            const uniqueKey = select.value;
-            
-            if (!uniqueKey || !window.dashboardData) {
-                document.getElementById('daywiseData').innerHTML = 
-                    '<p class="text-gray-500 text-center py-8 text-sm sm:text-base">Select a participant to see their daily breakdown</p>';
-                document.getElementById('prevParticipant').disabled = true;
-                document.getElementById('nextParticipant').disabled = true;
-                return;
-            }
-            
-            const { profileMap, steps } = window.dashboardData;
-            const profile = profileMap[uniqueKey];
-            
-            // Get all steps for this participant
-            const participantSteps = steps.filter(entry => {
-                const entryKey = entry.uniqueKey || createUniqueKey(entry.name, entry.flatNo);
-                return entryKey === uniqueKey;
-            });
-            
-            if (participantSteps.length === 0) {
-                document.getElementById('daywiseData').innerHTML = 
-                    '<p class="text-gray-500 text-center py-8 text-sm sm:text-base">No steps recorded yet</p>';
-                return;
-            }
-            
-            // Sort by date
-            participantSteps.sort((a, b) => {
-                const dateA = typeof a.date === 'string' ? a.date : a.date.toISOString();
-                const dateB = typeof b.date === 'string' ? b.date : b.date.toISOString();
-                return dateA.localeCompare(dateB);
-            });
-            
-            // Calculate total and average
-            const totalSteps = participantSteps.reduce((sum, entry) => sum + entry.steps, 0);
-            const avgSteps = Math.round(totalSteps / participantSteps.length);
-            
-            // Generate table HTML
-            const tableHtml = `
-                <div class="mb-4">
-                    <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-2">
-                        📅 Daily Steps for ${profile.name}
-                    </h3>
-                    <p class="text-xs sm:text-sm text-gray-600">Flat ${profile.flatNo}</p>
-                </div>
-                
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-100 border-b-2 border-gray-200">
-                            <tr>
-                                <th class="px-2 sm:px-4 py-2 text-left font-semibold text-gray-700">Date</th>
-                                <th class="px-2 sm:px-4 py-2 text-right font-semibold text-gray-700">Steps</th>
-                                <th class="px-2 sm:px-4 py-2 text-left font-semibold text-gray-700">vs Average</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            ${participantSteps.map(entry => {
-                                // Parse date string properly
-                                let formattedDate = '';
-                                try {
-                                    const dateStr = typeof entry.date === 'string' ? entry.date : entry.date.toISOString().split('T')[0];
-                                    const parts = dateStr.split('-');
-                                    
-                                    if (parts.length === 3) {
-                                        const year = parseInt(parts[0], 10);
-                                        const month = parseInt(parts[1], 10);
-                                        const day = parseInt(parts[2], 10);
-                                        
-                                        // Create date object with explicit numbers
-                                        const d = new Date(year, month - 1, day);
-                                        
-                                        // Verify the date is valid
-                                        if (!isNaN(d.getTime())) {
-                                            formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                                        } else {
-                                            formattedDate = dateStr; // Fallback to original string
-                                        }
-                                    } else {
-                                        formattedDate = dateStr; // Fallback to original string
-                                    }
-                                } catch (e) {
-                                    formattedDate = 'Date Error';
-                                }
-                                
-                                const percentage = Math.round((entry.steps / avgSteps) * 100);
-                                const barWidth = Math.min(percentage, 100);
-                                const barColor = percentage >= 100 ? 'bg-green-500' : percentage >= 75 ? 'bg-blue-500' : 'bg-yellow-500';
-                                
-                                return `
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-2 sm:px-4 py-2 text-gray-800">${formattedDate}</td>
-                                        <td class="px-2 sm:px-4 py-2 text-right font-semibold text-gray-800">${entry.steps.toLocaleString()}</td>
-                                        <td class="px-2 sm:px-4 py-2">
-                                            <div class="flex items-center gap-2">
-                                                <div class="flex-1 bg-gray-200 rounded-full h-2 max-w-[100px]">
-                                                    <div class="${barColor} h-2 rounded-full" style="width: ${barWidth}%"></div>
-                                                </div>
-                                                <span class="text-xs text-gray-600">${percentage}%</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                        <tfoot class="bg-gray-50 border-t-2 border-gray-200">
-                            <tr>
-                                <td class="px-2 sm:px-4 py-3 font-bold text-gray-800">Total</td>
-                                <td class="px-2 sm:px-4 py-3 text-right font-bold text-blue-600">${totalSteps.toLocaleString()}</td>
-                                <td class="px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-600">Avg: ${avgSteps.toLocaleString()}/day</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            `;
-            
-            document.getElementById('daywiseData').innerHTML = tableHtml;
-            
-            // Enable/disable navigation buttons
-            updateNavigationButtons();
-        }
-
-        // Navigate to previous/next participant
-        function navigateParticipant(direction) {
-            const select = document.getElementById('daywiseParticipantSelect');
-            const currentIndex = select.selectedIndex;
-            const newIndex = currentIndex + direction;
-            
-            if (newIndex >= 0 && newIndex < select.options.length) {
-                select.selectedIndex = newIndex;
-                loadDaywiseData();
-            }
-        }
-
-        // Update navigation button states
-        function updateNavigationButtons() {
-            const select = document.getElementById('daywiseParticipantSelect');
-            const prevBtn = document.getElementById('prevParticipant');
-            const nextBtn = document.getElementById('nextParticipant');
-            
-            if (!select.value) {
-                prevBtn.disabled = true;
-                nextBtn.disabled = true;
-                return;
-            }
-            
-            prevBtn.disabled = select.selectedIndex <= 1; // 0 is "Select a participant"
-            nextBtn.disabled = select.selectedIndex >= select.options.length - 1;
-        }
-
-        // Load registered list
-        function loadRegisteredList() {
-            if (!cachedData) return;
-            
-            const profiles = cachedData.profiles;
-            
-            const listHtml = profiles.length > 0
-                ? profiles.map(profile => `
-                    <div class="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
-                        <div>
-                            <p class="font-semibold text-gray-800 text-sm sm:text-base">${profile.name}</p>
-                            <p class="text-xs sm:text-sm text-gray-600">Flat ${profile.flatNo} • ${profile.age} years • ${profile.gender}</p>
-                        </div>
-                    </div>
-                `).join('')
-                : '<p class="text-gray-500 text-center py-4 text-sm sm:text-base">No participants registered yet</p>';
-            
-            document.getElementById('registeredList').innerHTML = listHtml;
-        }
-
-        // Load dashboard
-        function loadDashboard() {
-            if (!cachedData) return;
-            
-            const profiles = cachedData.profiles;
-            const steps = cachedData.steps;
-
-            let byAge = { 'Under 18': 0, '18-30': 0, '31-45': 0, '46-60': 0, 'Over 60': 0 };
-            let byGender = { 'Male': 0, 'Female': 0, 'Other': 0 };
-            let byBuilding = {}; // Track by building
-            let buildingParticipants = {}; // Track unique participants per building
-            let participantSteps = {}; // Track by unique key (name + flat)
-            let dailySteps = {}; // Track daily aggregate
-
-            // Create a map of profiles by unique key
-            const profileMap = {};
-            profiles.forEach(profile => {
-                const uniqueKey = profile.uniqueKey || createUniqueKey(profile.name, profile.flatNo);
-                profileMap[uniqueKey] = profile;
-            });
-
-            // Calculate stats
-            steps.forEach(entry => {
-                const uniqueKey = entry.uniqueKey || createUniqueKey(entry.name, entry.flatNo);
-                const profile = profileMap[uniqueKey];
-                
-                if (profile) {
-                    participantSteps[uniqueKey] = (participantSteps[uniqueKey] || 0) + entry.steps;
-
-                    const ageGroup = getAgeGroup(profile.age);
-                    byAge[ageGroup] += entry.steps;
-                    byGender[profile.gender] += entry.steps;
-                    
-                    // Extract building from flat number (first character)
-                    const building = profile.flatNo.charAt(0).toUpperCase();
-                    byBuilding[building] = (byBuilding[building] || 0) + entry.steps;
-                    
-                    // Track unique participants per building
-                    if (!buildingParticipants[building]) {
-                        buildingParticipants[building] = new Set();
-                    }
-                    buildingParticipants[building].add(uniqueKey);
-                    
-                    // Aggregate by date
-                    const dateKey = entry.date instanceof Date 
-                        ? entry.date.toISOString().split('T')[0]
-                        : (typeof entry.date === 'string' ? entry.date.split('T')[0] : entry.date);
-                    
-                    // DEBUG: Log first date processing
-                    if (Object.keys(dailySteps).length === 0) {
-                        console.log('DEBUG LoadDashboard - First entry date:', entry.date);
-                        console.log('DEBUG LoadDashboard - Date type:', typeof entry.date);
-                        console.log('DEBUG LoadDashboard - Date key:', dateKey);
-                    }
-                    
-                    dailySteps[dateKey] = (dailySteps[dateKey] || 0) + entry.steps;
-                }
-            });
-
-            // Store for use in leaderboard
-            window.dashboardData = {
-                participantSteps,
-                profileMap,
-                steps
-            };
-
-            // Load leaderboard (all participants)
-            loadLeaderboard();
-
-            // Update charts
-            updateCharts(byAge, byGender, byBuilding, buildingParticipants, dailySteps);
-            
-            // Update fun stats
-            const totalSteps = Object.values(participantSteps).reduce((sum, steps) => sum + steps, 0);
-            updateFunStats(totalSteps);
-        }
-
-        // Update charts
-        function updateCharts(byAge, byGender, byBuilding, buildingParticipants, dailySteps) {
-            const ageData = Object.entries(byAge).filter(([_, steps]) => steps > 0);
-            const genderData = Object.entries(byGender).filter(([_, steps]) => steps > 0);
-            const buildingData = Object.entries(byBuilding).filter(([_, steps]) => steps > 0);
-
-            // Sort building data alphabetically for consistent display
-            buildingData.sort((a, b) => a[0].localeCompare(b[0]));
-            
-            // Calculate total days from start to today
-            const startDate = new Date('2026-01-01');
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const totalDays = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24)) + 1; // +1 to include start day
-            
-            console.log(`Total days in challenge: ${totalDays} (Jan 1 to ${today.toISOString().split('T')[0]})`);
-            
-            // Calculate building stats - all 5 metrics
-            const buildingStats = {};
-            buildingData.forEach(([building, totalSteps]) => {
-                const participantCount = buildingParticipants[building] ? buildingParticipants[building].size : 0;
-                
-                // Metric 3: Daily Average Steps (building total per day)
-                const dailyAvgSteps = totalDays > 0 ? Math.round(totalSteps / totalDays) : 0;
-                
-                // Metric 4: Participant Average Steps (total per person)
-                const participantAvgSteps = participantCount > 0 ? Math.round(totalSteps / participantCount) : 0;
-                
-                // Metric 5: Daily Per Participant Average
-                const dailyPerParticipantAvg = (participantCount > 0 && totalDays > 0) 
-                    ? Math.round(totalSteps / (participantCount * totalDays)) 
-                    : 0;
-                
-                buildingStats[building] = {
-                    totalSteps: totalSteps,                       // Metric 1
-                    participants: participantCount,                // Metric 2
-                    dailyAvgSteps: dailyAvgSteps,                 // Metric 3
-                    participantAvgSteps: participantAvgSteps,     // Metric 4
-                    dailyPerParticipantAvg: dailyPerParticipantAvg // Metric 5
-                };
-                
-                console.log(`Building ${building}: Total: ${totalSteps}, Participants: ${participantCount}, Daily avg: ${dailyAvgSteps}, Per participant: ${participantAvgSteps}, Daily per participant: ${dailyPerParticipantAvg}`);
-            });
-
-            // Daily steps chart
-            const dailyCtx = document.getElementById('dailyStepsChart').getContext('2d');
-            if (dailyStepsChart) dailyStepsChart.destroy();
-            
-            if (dailySteps && Object.keys(dailySteps).length > 0) {
-                // Sort by date
-                const sortedDaily = Object.entries(dailySteps).sort((a, b) => {
-                    return new Date(a[0]) - new Date(b[0]);
-                });
-                
-                // Get last 30 days or all available data
-                const recentDaily = sortedDaily.slice(-30);
-                
-                dailyStepsChart = new Chart(dailyCtx, {
-                    type: 'line',
-                    data: {
-                        labels: recentDaily.map(([date]) => {
-                            // Parse date as local date to avoid timezone issues
-                            const [year, month, day] = date.split('-').map(Number);
-                            const d = new Date(year, month - 1, day);
-                            const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                            
-                            // DEBUG: Log first date to console
-                            if (date === recentDaily[0][0]) {
-                                console.log('DEBUG Chart - Raw date:', date);
-                                console.log('DEBUG Chart - Parsed:', year, month, day);
-                                console.log('DEBUG Chart - Date object:', d);
-                                console.log('DEBUG Chart - Label:', label);
-                            }
-                            
-                            return label;
-                        }),
-                        datasets: [{
-                            label: 'Daily Steps',
-                            data: recentDaily.map(([_, steps]) => steps),
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderColor: '#3b82f6',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return 'Steps: ' + context.parsed.y.toLocaleString();
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return value.toLocaleString();
-                                    }
-                                }
-                            },
-                            x: {
-                                ticks: {
-                                    maxRotation: 45,
-                                    minRotation: 45
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Building Charts (3 separate vertical charts)
-            
-            // Generate distinct colors for each building
-            const buildingColors = [
-                '#3b82f6', // Blue
-                '#ef4444', // Red
-                '#10b981', // Green
-                '#f59e0b', // Amber
-                '#8b5cf6', // Violet
-                '#ec4899', // Pink
-                '#14b8a6', // Teal
-                '#f97316', // Orange
-            ];
-            
-            console.log('Building chart data:', buildingData);
-            console.log('Building stats:', buildingStats);
-            
-            if (buildingData.length > 0) {
-                // Chart 1: Total Steps per Building (Vertical)
-                const totalStepsCtx = document.getElementById('buildingTotalStepsChart');
-                if (totalStepsCtx) {
-                    if (window.buildingTotalStepsChart) window.buildingTotalStepsChart.destroy();
-                    
-                    window.buildingTotalStepsChart = new Chart(totalStepsCtx.getContext('2d'), {
-                        type: 'bar',
-                        data: {
-                            labels: buildingData.map(([building]) => `Building ${building}`),
-                            datasets: [{
-                                label: 'Total Steps',
-                                data: buildingData.map(([_, steps]) => steps),
-                                backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length]),
-                                borderWidth: 0
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            return `Total: ${context.parsed.y.toLocaleString()} steps`;
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        callback: function(value) {
-                                            return value >= 1000 ? (value / 1000).toFixed(0) + 'K' : value;
-                                        }
-                                    }
-                                },
-                                x: {
-                                    ticks: {
-                                        maxRotation: 45,
-                                        minRotation: 45,
-                                        font: {
-                                            size: 10
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                    console.log('Total Steps chart created');
-                }
-                
-                // Chart 2: Participants per Building (Vertical)
-                const participantsCtx = document.getElementById('buildingParticipantsChart');
-                if (participantsCtx) {
-                    if (window.buildingParticipantsChart) window.buildingParticipantsChart.destroy();
-                    
-                    window.buildingParticipantsChart = new Chart(participantsCtx.getContext('2d'), {
-                        type: 'bar',
-                        data: {
-                            labels: buildingData.map(([building]) => `Building ${building}`),
-                            datasets: [{
-                                label: 'Participants',
-                                data: buildingData.map(([building]) => buildingStats[building].participants),
-                                backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length]),
-                                borderWidth: 0
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            return `Participants: ${context.parsed.y}`;
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        stepSize: 1,
-                                        callback: function(value) {
-                                            return Math.floor(value) === value ? value : '';
-                                        }
-                                    }
-                                },
-                                x: {
-                                    ticks: {
-                                        maxRotation: 45,
-                                        minRotation: 45,
-                                        font: {
-                                            size: 10
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                    console.log('Participants chart created');
-                }
-                
-                // Chart 3: Daily Per Participant Average (Vertical)
-                const dailyAvgCtx = document.getElementById('buildingDailyAvgChart');
-                if (dailyAvgCtx) {
-                    if (window.buildingDailyAvgChart) window.buildingDailyAvgChart.destroy();
-                    
-                    window.buildingDailyAvgChart = new Chart(dailyAvgCtx.getContext('2d'), {
-                        type: 'bar',
-                        data: {
-                            labels: buildingData.map(([building]) => `Building ${building}`),
-                            datasets: [{
-                                label: 'Daily Per Participant Avg',
-                                data: buildingData.map(([building]) => buildingStats[building].dailyPerParticipantAvg),
-                                backgroundColor: buildingData.map((_, idx) => buildingColors[idx % buildingColors.length]),
-                                borderWidth: 0
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            return `Daily Avg: ${context.parsed.y.toLocaleString()} steps/person/day`;
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        callback: function(value) {
-                                            return value.toLocaleString();
-                                        }
-                                    }
-                                },
-                                x: {
-                                    ticks: {
-                                        maxRotation: 45,
-                                        minRotation: 45,
-                                        font: {
-                                            size: 10
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                    console.log('Daily Average chart created');
-                }
-                
-                console.log('All 3 building charts created successfully (vertical bars)');
-            } else {
-                console.log('No building data to display');
-            }
-
-
-            // Age chart
-            const ageCtx = document.getElementById('ageChart').getContext('2d');
-            if (ageChart) ageChart.destroy();
-            
-            if (ageData.length > 0) {
-                ageChart = new Chart(ageCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: ageData.map(([age]) => age),
-                        datasets: [{
-                            label: 'Steps',
-                            data: ageData.map(([_, steps]) => steps),
-                            backgroundColor: '#3b82f6'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return value.toLocaleString();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Gender chart
-            const genderCtx = document.getElementById('genderChart').getContext('2d');
-            if (genderChart) genderChart.destroy();
-            
-            if (genderData.length > 0) {
-                genderChart = new Chart(genderCtx, {
-                    type: 'pie',
-                    data: {
-                        labels: genderData.map(([gender]) => gender),
-                        datasets: [{
-                            data: genderData.map(([_, steps]) => steps),
-                            backgroundColor: ['#3b82f6', '#ef4444', '#10b981']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        // Update fun stats
-        function updateFunStats(totalSteps) {
-            // Constants
-            const AVG_STRIDE_M = 0.762;  // Average stride length in meters
-            const SOCIETY_PERIMETER_M = 440;  // Apostrophe society perimeter
-            const MUMBAI_DELHI_KM = 1411;  // Mumbai to Delhi distance
-            const SPACE_BOUNDARY_KM = 100;  // Kármán line (space boundary)
-            const CALORIES_PER_STEP = 0.05;  // Average calories per step
-            const CO2_PER_KM = 0.2;  // CO2 saved per km (vs driving) in kg
-            const TREE_CO2_PER_YEAR = 21.8;  // CO2 absorbed by one tree per year in kg
-            
-            // Calculate distance
-            const totalDistanceM = totalSteps * AVG_STRIDE_M;
-            const totalDistanceKm = totalDistanceM / 1000;
-            
-            // Calculate each stat
-            const distanceKm = totalDistanceKm.toFixed(0);
-            const societyLoops = Math.floor(totalDistanceM / SOCIETY_PERIMETER_M).toLocaleString();
-            const mumbaiDelhiPercent = (totalDistanceKm / MUMBAI_DELHI_KM * 100).toFixed(1);
-            const calories = Math.floor(totalSteps * CALORIES_PER_STEP).toLocaleString();
-            const co2Saved = totalDistanceKm * CO2_PER_KM;
-            const treesEquivalent = Math.floor(co2Saved / TREE_CO2_PER_YEAR);
-            const spaceTrips = (totalDistanceKm / SPACE_BOUNDARY_KM).toFixed(1);
-            
-            // Update DOM
-            document.getElementById('statDistance').textContent = distanceKm + ' km';
-            document.getElementById('statLoops').textContent = societyLoops;
-            document.getElementById('statIndia').textContent = mumbaiDelhiPercent + '%';
-            document.getElementById('statCalories').textContent = calories;
-            document.getElementById('statTrees').textContent = treesEquivalent;
-            document.getElementById('statSpace').textContent = spaceTrips + '×';
-        }
-
-        // Toggle dashboard
-        async function toggleDashboard() {
-            const dashboard = document.getElementById('dashboard');
-            const button = document.getElementById('toggleBtn');
-            
-            if (dashboard.classList.contains('hidden')) {
-                dashboard.classList.remove('hidden');
-                button.textContent = '▲ Hide Community Dashboard';
-                await loadData();
-                loadDashboard();
-            } else {
-                dashboard.classList.add('hidden');
-                button.textContent = '▼ View Community Dashboard';
-            }
-        }
-
-        // Milestone celebrations
-        const MILESTONES = [
-            {
-                steps: 500000,
-                icon: '🎯',
-                title: '500K Steps Reached!',
-                message: 'Half a million steps! We\'re just getting started!',
-                stats: ['381 km covered', '866 loops of Apostrophe', '27% to Mumbai']
-            },
-            {
-                steps: 1000000,
-                icon: '🎊',
-                title: '1 MILLION STEPS!',
-                message: 'One million steps achieved! We\'ve walked to Mumbai!',
-                stats: ['762 km covered', '1,732 loops of Apostrophe', '54% to Mumbai', '50,000 calories burned']
-            },
-            {
-                steps: 2500000,
-                icon: '🏆',
-                title: '2.5 Million Steps!',
-                message: 'Quarter way to our goal! We\'ve crossed Mumbai-Delhi!',
-                stats: ['1,905 km covered', '4,330 loops of Apostrophe', '135% to Mumbai', '125,000 calories burned']
-            },
-            {
-                steps: 5000000,
-                icon: '🥇',
-                title: 'HALFWAY THERE!',
-                message: '5 MILLION STEPS! We\'ve walked from Mumbai to Delhi and back!',
-                stats: ['3,810 km covered', '8,659 loops of Apostrophe', '270% to Mumbai', '250,000 calories burned', '349 trees equivalent']
-            },
-            {
-                steps: 7500000,
-                icon: '🌟',
-                title: '7.5 Million Steps!',
-                message: 'Three-quarters complete! The finish line is in sight!',
-                stats: ['5,715 km covered', '12,989 loops of Apostrophe', '405% to Mumbai', '375,000 calories burned', '524 trees equivalent']
-            },
-            {
-                steps: 10000000,
-                icon: '🥳',
-                title: 'GOAL ACHIEVED!!!',
-                message: '10 MILLION STEPS! WE DID IT TOGETHER! 🎉🎉🎉',
-                stats: ['7,620 km covered', '17,318 loops of Apostrophe', '540% to Mumbai', '500,000 calories burned', '698 trees equivalent', '76 trips to space!']
-            }
-        ];
-
-        function checkMilestones(totalSteps) {
-            // Get previously shown milestones from localStorage
-            const shownMilestones = JSON.parse(localStorage.getItem('shownMilestones') || '[]');
-            
-            // Find the highest milestone we've reached but haven't shown yet
-            let milestoneToShow = null;
-            for (let i = MILESTONES.length - 1; i >= 0; i--) {
-                const milestone = MILESTONES[i];
-                if (totalSteps >= milestone.steps && !shownMilestones.includes(milestone.steps)) {
-                    milestoneToShow = milestone;
-                    break;
-                }
-            }
-            
-            // Show milestone if found
-            if (milestoneToShow) {
-                showMilestone(milestoneToShow);
-                // Mark as shown
-                shownMilestones.push(milestoneToShow.steps);
-                localStorage.setItem('shownMilestones', JSON.stringify(shownMilestones));
-            }
-        }
-
-        function showMilestone(milestone) {
-            // Update modal content
-            document.getElementById('milestoneIcon').textContent = milestone.icon;
-            document.getElementById('milestoneTitle').textContent = milestone.title;
-            document.getElementById('milestoneMessage').textContent = milestone.message;
-            
-            // Build stats HTML
-            const statsHTML = milestone.stats.map(stat => 
-                `<div class="flex items-center gap-2 mb-2">
-                    <span class="text-blue-600 text-xl">✓</span>
-                    <span class="text-gray-700">${stat}</span>
-                </div>`
-            ).join('');
-            document.getElementById('milestoneStats').innerHTML = statsHTML;
-            
-            // Show modal
-            document.getElementById('milestoneModal').classList.remove('hidden');
-            
-            // Apply bounce animation to card
-            const card = document.getElementById('milestoneCard');
-            card.classList.add('bounce-once');
-            
-            // Remove animation class after it completes (0.6s)
-            setTimeout(() => {
-                card.classList.remove('bounce-once');
-            }, 600);
-            
-            // Play celebration sound (optional - browser support varies)
-            try {
-                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA8PVKXi8bVjHQU2jdXzzn0pBSt+zPLaizsIGGS57OihUBELTqPh8bllHgU0itTz0H8rBSx+zPLajTsIF2W57OmgUREKTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBSx+zPLajTsIF2W57OmgURIJTqPh8bllHgU0idTz0H8rBQ==');
-                audio.play().catch(() => {}); // Ignore if audio fails
-            } catch (e) {
-                // Audio not supported, ignore
-            }
-        }
-
-        function closeMilestone() {
-            document.getElementById('milestoneModal').classList.add('hidden');
-        }
-
-        // Initialize on page load
-        window.onload = async function() {
-            // Check if SCRIPT_URL is set
-            if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
-                document.getElementById('setupNotice').classList.remove('hidden');
-            } else {
-                document.getElementById('setupNotice').classList.add('hidden');
-            }
-            
-            setDefaultDate(); // Set date input to today
-            await loadData();
-            showView('submit');
-        };
-    </script>
-</body>
-</html>
+                submitButton.classList.add('bg
