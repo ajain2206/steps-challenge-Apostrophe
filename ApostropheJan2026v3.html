@@ -384,6 +384,7 @@
                                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="steps">Total Steps (High to Low)</option>
+                                    <option value="avgDaily">Avg Daily Steps (High to Low)</option>
                                     <option value="name">Name (A-Z)</option>
                                     <option value="flat">Flat Number</option>
                                 </select>
@@ -777,26 +778,31 @@
             document.getElementById('totalSteps').textContent = totalSteps.toLocaleString();
             document.getElementById('totalParticipants').textContent = data.profiles.length;
             
-            // Update goal progress
-            const percentage = Math.min(100, (totalSteps / GOAL_STEPS) * 100);
-            const remaining = Math.max(0, GOAL_STEPS - totalSteps);
+            // Update goal progress - show actual percentage (not capped at 100%)
+            const percentage = (totalSteps / GOAL_STEPS) * 100;
+            const remaining = GOAL_STEPS - totalSteps;
             
             document.getElementById('goalPercentage').textContent = percentage.toFixed(1) + '%';
-            document.getElementById('goalProgress').style.width = percentage + '%';
+            // Progress bar visual is capped at 100% for display, but percentage shows actual
+            document.getElementById('goalProgress').style.width = Math.min(100, percentage) + '%';
             document.getElementById('goalCurrent').textContent = totalSteps.toLocaleString() + ' steps';
-            document.getElementById('goalRemaining').textContent = remaining.toLocaleString() + ' to go!';
+            
+            if (remaining > 0) {
+                document.getElementById('goalRemaining').textContent = remaining.toLocaleString() + ' to go!';
+                document.getElementById('goalRemaining').className = 'text-gray-600';
+            } else {
+                // Goal exceeded - show how much over
+                const exceeded = totalSteps - GOAL_STEPS;
+                const exceededPercent = ((exceeded / GOAL_STEPS) * 100).toFixed(1);
+                document.getElementById('goalRemaining').textContent = `🎉 Goal Exceeded by ${exceeded.toLocaleString()} steps (+${exceededPercent}%)!`;
+                document.getElementById('goalRemaining').className = 'text-green-600 font-bold';
+            }
             
             // Update fun stats
             updateFunStats(totalSteps);
             
             // Check for milestone celebrations
             checkMilestones(totalSteps);
-            
-            // Add celebration if goal reached
-            if (totalSteps >= GOAL_STEPS) {
-                document.getElementById('goalRemaining').textContent = '🎉 Goal Achieved! 🎉';
-                document.getElementById('goalRemaining').className = 'text-green-600 font-bold';
-            }
             
             // Update participant dropdown
             populateParticipantDropdown(data.profiles);
@@ -855,40 +861,101 @@
                 );
             }
             
+            // Calculate average daily for each participant
+            allParticipants = allParticipants.map(entry => ({
+                ...entry,
+                avgDaily: entry.daysSubmitted > 0 ? Math.round(entry.steps / entry.daysSubmitted) : 0
+            }));
+            
             // Apply sorting
             const sortBy = document.getElementById('sortBy')?.value || 'steps';
             if (sortBy === 'steps') {
                 allParticipants.sort((a, b) => b.steps - a.steps);
+            } else if (sortBy === 'avgDaily') {
+                allParticipants.sort((a, b) => b.avgDaily - a.avgDaily);
             } else if (sortBy === 'name') {
                 allParticipants.sort((a, b) => a.name.localeCompare(b.name));
             } else if (sortBy === 'flat') {
                 allParticipants.sort((a, b) => a.flatNo.localeCompare(b.flatNo));
             }
             
-            // Generate HTML
-            const leaderboardHtml = allParticipants.length > 0
-                ? allParticipants.map((entry, idx) => `
-                    <div class="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                        <div class="flex items-center gap-2 sm:gap-4 flex-1">
-                            <span class="text-sm sm:text-lg font-bold text-gray-400 w-5 sm:w-8">#${idx + 1}</span>
-                            <div class="flex-1">
-                                <p class="font-semibold text-gray-800 text-sm sm:text-base">${entry.name}</p>
-                                <p class="text-xs sm:text-sm text-gray-600">Flat ${entry.flatNo}</p>
-                                <div class="mt-1 flex items-center gap-2">
-                                    <span class="text-lg">${entry.statusIcon}</span>
-                                    <span class="text-xs sm:text-sm ${entry.statusColor} font-medium">
-                                        ${entry.daysSubmitted}/${entry.totalDays} days
-                                    </span>
-                                    <span class="text-xs text-gray-500">(${entry.percentage}%)</span>
+            // Generate Desktop Table HTML
+            const desktopTableHtml = allParticipants.length > 0
+                ? `
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b-2 border-gray-300">
+                                <th class="text-left py-3 px-2 text-sm font-bold text-gray-700">#</th>
+                                <th class="text-left py-3 px-2 text-sm font-bold text-gray-700">Name</th>
+                                <th class="text-left py-3 px-2 text-sm font-bold text-gray-700">Flat</th>
+                                <th class="text-right py-3 px-2 text-sm font-bold text-gray-700">Total Steps</th>
+                                <th class="text-center py-3 px-2 text-sm font-bold text-gray-700">Days</th>
+                                <th class="text-right py-3 px-2 text-sm font-bold text-gray-700">Avg/Day</th>
+                                <th class="text-left py-3 px-2 text-sm font-bold text-gray-700">Completion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${allParticipants.map((entry, idx) => `
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                                    <td class="py-3 px-2 text-sm font-bold text-gray-400">${idx + 1}</td>
+                                    <td class="py-3 px-2 text-sm font-semibold text-gray-800">${entry.name}</td>
+                                    <td class="py-3 px-2 text-sm text-gray-600">${entry.flatNo}</td>
+                                    <td class="py-3 px-2 text-sm font-bold text-blue-600 text-right">${entry.steps.toLocaleString()}</td>
+                                    <td class="py-3 px-2 text-sm text-gray-700 text-center">${entry.daysSubmitted}</td>
+                                    <td class="py-3 px-2 text-sm font-semibold text-gray-700 text-right">${entry.avgDaily.toLocaleString()}</td>
+                                    <td class="py-3 px-2 text-xs">
+                                        <span class="inline-flex items-center gap-1">
+                                            <span>${entry.statusIcon}</span>
+                                            <span class="${entry.statusColor} font-medium">${entry.daysSubmitted}/${entry.totalDays}</span>
+                                            <span class="text-gray-500">(${entry.percentage}%)</span>
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                `
+                : '<div class="hidden md:block"><p class="text-gray-500 text-center py-4 text-sm sm:text-base">No participants found</p></div>';
+            
+            // Generate Mobile Cards HTML
+            const mobileCardsHtml = allParticipants.length > 0
+                ? `
+                <div class="block md:hidden space-y-2">
+                    ${allParticipants.map((entry, idx) => `
+                        <div class="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-bold text-gray-400">#${idx + 1}</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-800 text-sm">${entry.name}</p>
+                                        <p class="text-xs text-gray-600">Flat ${entry.flatNo}</p>
+                                    </div>
+                                </div>
+                                <p class="text-base font-bold text-blue-600">${entry.steps.toLocaleString()}</p>
+                            </div>
+                            <div class="flex items-center justify-between text-xs">
+                                <div class="flex items-center gap-1 text-gray-700">
+                                    <span class="font-medium">${entry.daysSubmitted} days</span>
+                                    <span class="text-gray-400">•</span>
+                                    <span class="font-semibold">${entry.avgDaily.toLocaleString()} avg/day</span>
                                 </div>
                             </div>
+                            <div class="mt-1 flex items-center gap-1">
+                                <span class="text-base">${entry.statusIcon}</span>
+                                <span class="text-xs ${entry.statusColor} font-medium">
+                                    ${entry.daysSubmitted}/${entry.totalDays} days
+                                </span>
+                                <span class="text-xs text-gray-500">(${entry.percentage}%)</span>
+                            </div>
                         </div>
-                        <p class="text-base sm:text-xl font-bold text-blue-600">${entry.steps.toLocaleString()}</p>
-                    </div>
-                `).join('')
-                : '<p class="text-gray-500 text-center py-4 text-sm sm:text-base">No participants found</p>';
+                    `).join('')}
+                </div>
+                `
+                : '<div class="block md:hidden"><p class="text-gray-500 text-center py-4 text-sm">No participants found</p></div>';
             
-            document.getElementById('allParticipants').innerHTML = leaderboardHtml;
+            document.getElementById('allParticipants').innerHTML = desktopTableHtml + mobileCardsHtml;
             document.getElementById('participantCount').textContent = 
                 `Showing ${allParticipants.length} participant${allParticipants.length !== 1 ? 's' : ''}`;
             
