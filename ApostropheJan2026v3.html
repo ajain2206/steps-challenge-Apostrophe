@@ -1428,11 +1428,37 @@
                     runningAverages.push(avg);
                 });
                 
-                // Calculate daily target
-                // Total days from Jan 1 to challenge end (let's assume 50 days for Feb 19)
-                const CHALLENGE_DAYS = 50;
-                const dailyTargetValue = Math.round(GOAL_STEPS / CHALLENGE_DAYS);
-                const targetLine = Array(recentDaily.length).fill(dailyTargetValue);
+                // Calculate DYNAMIC daily target based on remaining steps and days
+                // Challenge runs from Jan 1 to Jan 26, 2026 (26 days)
+                const CHALLENGE_START = new Date('2026-01-01');
+                const CHALLENGE_END = new Date('2026-01-26');
+                const TOTAL_CHALLENGE_DAYS = 26;
+                
+                const dynamicTargets = [];
+                let cumulativeForTarget = 0;
+                
+                recentDaily.forEach(([dateStr, steps], index) => {
+                    // Calculate cumulative steps up to (but not including) this day
+                    // This represents what we had accomplished before this day started
+                    
+                    // Calculate which day of challenge this is (1-26)
+                    const currentDate = new Date(dateStr);
+                    const dayNumber = Math.floor((currentDate - CHALLENGE_START) / (1000 * 60 * 60 * 24)) + 1;
+                    
+                    // Calculate remaining steps and days BEFORE this day's steps were logged
+                    const remainingSteps = GOAL_STEPS - cumulativeForTarget;
+                    const remainingDays = TOTAL_CHALLENGE_DAYS - dayNumber + 1; // +1 because this day is included
+                    
+                    // Calculate what the target should be for this day
+                    const targetForDay = remainingDays > 0 ? Math.round(remainingSteps / remainingDays) : 0;
+                    dynamicTargets.push(targetForDay);
+                    
+                    // Add this day's steps to cumulative for next iteration
+                    cumulativeForTarget += steps;
+                });
+                
+                // Get the CURRENT daily target (today's target)
+                const currentDailyTarget = dynamicTargets[dynamicTargets.length - 1];
                 
                 // Update stats panel
                 const todaySteps = recentDaily[recentDaily.length - 1][1];
@@ -1440,11 +1466,11 @@
                 
                 document.getElementById('todaySteps').textContent = todaySteps.toLocaleString();
                 document.getElementById('runningAvg').textContent = currentAvg.toLocaleString() + '/day';
-                document.getElementById('dailyTarget').textContent = dailyTargetValue.toLocaleString() + '/day';
+                document.getElementById('dailyTarget').textContent = currentDailyTarget.toLocaleString() + '/day';
                 
                 // Calculate status message
                 const vsAvg = todaySteps - currentAvg;
-                const vsTarget = todaySteps - dailyTargetValue;
+                const vsTarget = todaySteps - currentDailyTarget;
                 let statusMsg = '';
                 let statusClass = '';
                 
@@ -1507,14 +1533,14 @@
                             },
                             {
                                 label: 'Daily Target',
-                                data: targetLine,
+                                data: dynamicTargets,
                                 type: 'line',
                                 borderColor: 'rgb(239, 68, 68)',
                                 backgroundColor: 'transparent',
                                 borderWidth: 2,
                                 borderDash: [5, 5],
                                 pointRadius: 0,
-                                tension: 0,
+                                tension: 0.2,  // Slight curve since target changes over time
                                 order: 1
                             }
                         ]
@@ -1542,7 +1568,7 @@
                                         
                                         if (label === 'Daily Steps') {
                                             const avg = runningAverages[context.dataIndex];
-                                            const target = dailyTargetValue;
+                                            const target = dynamicTargets[context.dataIndex];
                                             const vsAvg = context.parsed.y - avg;
                                             const vsTarget = context.parsed.y - target;
                                             return [
