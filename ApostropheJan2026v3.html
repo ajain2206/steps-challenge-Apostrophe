@@ -2260,7 +2260,9 @@
             if (potentialPercentEl) potentialPercentEl.textContent = percentOfGoal + '%';
             
             filteredMissingData = [...allMissingData];
-            displayMissingEntries();
+            
+            // Apply default sort (Most Missing - High to Low)
+            sortMissingEntries();
         }
 
         function displayMissingEntries() {
