@@ -503,6 +503,103 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Missing Steps Section -->
+                <div class="mt-6">
+                    <!-- Motivational Message -->
+                    <div class="bg-gradient-to-r from-blue-50 to-white rounded-lg shadow-lg p-6 sm:p-8 mb-6 border-2 border-blue-400">
+                        <h2 class="text-xl sm:text-2xl font-bold text-blue-900 text-center mb-6">💙 TO OUR APOSTROPHE FAMILY 💙</h2>
+                        
+                        <div class="space-y-4 text-gray-700">
+                            <p class="text-base sm:text-lg">
+                                Every number on this page represents one of us.
+                                Every missing entry is a chance to contribute.
+                            </p>
+                            
+                            <p class="text-base sm:text-lg">
+                                We're not just counting steps – we're building something together. 
+                                A healthier, stronger community. 🌟
+                            </p>
+                            
+                            <!-- Impact Stats Box -->
+                            <div class="bg-blue-100 rounded-lg p-4 sm:p-5 border border-blue-300">
+                                <h3 class="font-bold text-blue-900 mb-3 text-base sm:text-lg">📊 THE IMPACT OF YOUR MISSING STEPS:</h3>
+                                <ul class="space-y-2 text-sm sm:text-base">
+                                    <li>• <span id="missingParticipantsCount">0</span> participants with missing entries</li>
+                                    <li>• <span id="missingEntriesCount">0</span> total missing entries</li>
+                                    <li>• Estimated potential: <span id="missingPotentialSteps" class="font-bold text-blue-700">~0M</span> steps</li>
+                                    <li>• That's <span id="missingPotentialPercent" class="font-bold text-blue-700">0%</span> of our 20M goal! 🎯</li>
+                                </ul>
+                            </div>
+                            
+                            <p class="text-base sm:text-lg">
+                                Your 10,000 steps from January 5th? That's 0.05% of our goal.<br>
+                                All missing entries together? That could be significant!
+                            </p>
+                            
+                            <p class="text-lg sm:text-xl font-semibold text-blue-800">
+                                💡 No contribution is too small. Every step matters.<br>
+                                Every step brings us closer to 20M by January 26! 🇮🇳
+                            </p>
+                            
+                            <p class="text-xl sm:text-2xl font-bold text-center text-blue-900">
+                                ✨ Only together can we achieve our community goal! ✨
+                            </p>
+                            
+                            <!-- Reference Box -->
+                            <div class="bg-yellow-50 rounded-lg p-4 border-2 border-yellow-300 text-center">
+                                <p class="text-base sm:text-lg font-semibold text-gray-800">
+                                    👇 Check the list below to see if you have missing entries<br class="hidden sm:block">
+                                    and help us reach our goal!
+                                </p>
+                            </div>
+                            
+                            <p class="text-lg sm:text-xl font-bold text-center text-blue-900">
+                                Let's finish strong, Apostrophe! 💪
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Missing Entries List -->
+                    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                        <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-4">⚠️ MISSING STEP ENTRIES - Please Add Your Data!</h2>
+                        
+                        <!-- Filters and Controls -->
+                        <div class="mb-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
+                            <select id="missingFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base" onchange="filterMissingEntries()">
+                                <option value="all">All Participants</option>
+                                <option value="critical">🔴 Critical (10+ missing)</option>
+                                <option value="concerning">⚠️ Concerning (5-9 missing)</option>
+                                <option value="minor">⚡ Minor (1-4 missing)</option>
+                            </select>
+                            
+                            <select id="missingSort" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base" onchange="sortMissingEntries()">
+                                <option value="most">Most Missing (High to Low)</option>
+                                <option value="least">Least Missing (Low to High)</option>
+                                <option value="name">Name (A-Z)</option>
+                                <option value="lastLogged">Last Logged (Recent First)</option>
+                            </select>
+                            
+                            <input 
+                                type="text" 
+                                id="missingSearch" 
+                                placeholder="Search by name or flat..."
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+                                oninput="searchMissingEntries()"
+                            />
+                        </div>
+                        
+                        <!-- Summary -->
+                        <div id="missingSummary" class="mb-4 text-sm sm:text-base text-gray-600">
+                            Loading missing entries...
+                        </div>
+                        
+                        <!-- Cards Grid -->
+                        <div id="missingEntriesGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            <!-- Cards will be generated dynamically -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2043,6 +2140,246 @@
         }, renderDelay);
     }
 
+        // Missing Entries Functions
+        let allMissingData = [];
+        let filteredMissingData = [];
+
+        function calculateMissingEntries() {
+            if (!participants || participants.length === 0) {
+                console.log('No participants data available');
+                return;
+            }
+
+            const CHALLENGE_START = new Date('2026-01-01');
+            const today = new Date();
+            const CHALLENGE_END = new Date('2026-01-26');
+            
+            // Use the earlier of today or challenge end
+            const endDate = today < CHALLENGE_END ? today : CHALLENGE_END;
+            
+            // Get all dates from start to end
+            const allDates = [];
+            for (let d = new Date(CHALLENGE_START); d <= endDate; d.setDate(d.getDate() + 1)) {
+                allDates.push(new Date(d).toISOString().split('T')[0]);
+            }
+            
+            console.log(`Checking for missing entries from ${CHALLENGE_START.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
+            console.log(`Total days to check: ${allDates.length}`);
+            
+            allMissingData = [];
+            
+            participants.forEach(person => {
+                // Get dates this person has logged
+                const loggedDates = new Set();
+                if (dailyData[person.name]) {
+                    Object.keys(dailyData[person.name]).forEach(date => {
+                        loggedDates.add(date);
+                    });
+                }
+                
+                // Find missing dates
+                const missingDates = allDates.filter(date => !loggedDates.has(date));
+                
+                if (missingDates.length > 0) {
+                    // Find last logged date
+                    const logged = Array.from(loggedDates).sort().reverse();
+                    const lastLogged = logged.length > 0 ? logged[0] : null;
+                    const daysSinceLastLog = lastLogged ? 
+                        Math.floor((endDate - new Date(lastLogged)) / (1000 * 60 * 60 * 24)) : null;
+                    
+                    // Calculate severity
+                    let severity = 'minor';
+                    let severityIcon = '⚡';
+                    if (missingDates.length >= 10) {
+                        severity = 'critical';
+                        severityIcon = '🔴';
+                    } else if (missingDates.length >= 5) {
+                        severity = 'concerning';
+                        severityIcon = '⚠️';
+                    }
+                    
+                    allMissingData.push({
+                        name: person.name,
+                        flatNo: person.flatNo,
+                        missingCount: missingDates.length,
+                        missingDates: missingDates,
+                        lastLogged: lastLogged,
+                        daysSinceLastLog: daysSinceLastLog,
+                        severity: severity,
+                        severityIcon: severityIcon,
+                        totalSteps: byParticipant[person.name] || 0,
+                        daysLogged: loggedDates.size
+                    });
+                }
+            });
+            
+            console.log(`Found ${allMissingData.length} participants with missing entries`);
+            console.log(`Total missing entries: ${allMissingData.reduce((sum, p) => sum + p.missingCount, 0)}`);
+            
+            // Update stats in motivational message
+            const totalMissingEntries = allMissingData.reduce((sum, p) => sum + p.missingCount, 0);
+            const estimatedSteps = totalMissingEntries * 10000; // Assume 10K steps per missing day
+            const percentOfGoal = ((estimatedSteps / GOAL_STEPS) * 100).toFixed(1);
+            
+            document.getElementById('missingParticipantsCount').textContent = allMissingData.length;
+            document.getElementById('missingEntriesCount').textContent = totalMissingEntries.toLocaleString();
+            document.getElementById('missingPotentialSteps').textContent = '~' + (estimatedSteps / 1000000).toFixed(1) + 'M';
+            document.getElementById('missingPotentialPercent').textContent = percentOfGoal + '%';
+            
+            filteredMissingData = [...allMissingData];
+            displayMissingEntries();
+        }
+
+        function displayMissingEntries() {
+            const grid = document.getElementById('missingEntriesGrid');
+            const summary = document.getElementById('missingSummary');
+            
+            if (!grid || !summary) return;
+            
+            if (filteredMissingData.length === 0) {
+                summary.textContent = '🎉 No missing entries found! Everyone is up to date!';
+                grid.innerHTML = '<p class="text-gray-500 text-center py-8 col-span-full">No missing entries to display</p>';
+                return;
+            }
+            
+            // Update summary
+            const totalMissing = filteredMissingData.reduce((sum, p) => sum + p.missingCount, 0);
+            summary.innerHTML = `
+                <span class="font-semibold">${filteredMissingData.length} participants</span> with missing entries 
+                (<span class="font-semibold">${totalMissing.toLocaleString()} total missing entries</span>)
+            `;
+            
+            // Generate cards
+            const cardsHTML = filteredMissingData.map(person => {
+                // Format missing dates
+                let datesDisplay = person.missingDates.slice(0, 15).map(d => {
+                    const date = new Date(d);
+                    return `Jan ${date.getDate()}`;
+                }).join(', ');
+                
+                if (person.missingDates.length > 15) {
+                    datesDisplay += `, ... +${person.missingDates.length - 15} more`;
+                }
+                
+                // Last logged message
+                let lastLoggedMsg = '';
+                if (person.lastLogged) {
+                    const lastDate = new Date(person.lastLogged);
+                    const dateStr = lastDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    if (person.daysSinceLastLog === 0) {
+                        lastLoggedMsg = `Last logged: ${dateStr} (today) ✅`;
+                    } else if (person.daysSinceLastLog === 1) {
+                        lastLoggedMsg = `Last logged: ${dateStr} (yesterday) ✅`;
+                    } else if (person.daysSinceLastLog <= 3) {
+                        lastLoggedMsg = `Last logged: ${dateStr} (${person.daysSinceLastLog} days ago) ✅`;
+                    } else if (person.daysSinceLastLog <= 7) {
+                        lastLoggedMsg = `Last logged: ${dateStr} (${person.daysSinceLastLog} days ago) ⚠️`;
+                    } else {
+                        lastLoggedMsg = `Last logged: ${dateStr} (${person.daysSinceLastLog} days ago!) 🔴`;
+                    }
+                } else {
+                    lastLoggedMsg = 'Never logged 🔴';
+                }
+                
+                // Background color based on severity
+                let bgColor = 'bg-white';
+                if (person.severity === 'critical') {
+                    bgColor = 'bg-red-50';
+                } else if (person.severity === 'concerning') {
+                    bgColor = 'bg-orange-50';
+                } else {
+                    bgColor = 'bg-yellow-50';
+                }
+                
+                return `
+                    <div class="${bgColor} rounded-lg shadow border-2 ${person.severity === 'critical' ? 'border-red-300' : person.severity === 'concerning' ? 'border-orange-300' : 'border-yellow-300'} p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-base">${person.name}</h3>
+                                <p class="text-sm text-gray-600">${person.flatNo}</p>
+                            </div>
+                            <span class="text-2xl">${person.severityIcon}</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="font-semibold text-gray-900 mb-1">
+                                Missing: ${person.missingCount} ${person.missingCount === 1 ? 'day' : 'days'}
+                                ${person.severity === 'critical' ? '🔴 CRITICAL!' : ''}
+                            </p>
+                            <p class="text-sm text-gray-700 leading-relaxed">
+                                ${datesDisplay}
+                            </p>
+                        </div>
+                        
+                        <div class="text-sm text-gray-600 space-y-1">
+                            <p>${lastLoggedMsg}</p>
+                            <p>Days logged: ${person.daysLogged}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            grid.innerHTML = cardsHTML;
+        }
+
+        function filterMissingEntries() {
+            const filter = document.getElementById('missingFilter').value;
+            
+            if (filter === 'all') {
+                filteredMissingData = [...allMissingData];
+            } else {
+                filteredMissingData = allMissingData.filter(p => p.severity === filter);
+            }
+            
+            // Reapply current sort
+            sortMissingEntries();
+        }
+
+        function sortMissingEntries() {
+            const sort = document.getElementById('missingSort').value;
+            
+            switch(sort) {
+                case 'most':
+                    filteredMissingData.sort((a, b) => b.missingCount - a.missingCount);
+                    break;
+                case 'least':
+                    filteredMissingData.sort((a, b) => a.missingCount - b.missingCount);
+                    break;
+                case 'name':
+                    filteredMissingData.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'lastLogged':
+                    filteredMissingData.sort((a, b) => {
+                        if (!a.lastLogged) return 1;
+                        if (!b.lastLogged) return -1;
+                        return new Date(b.lastLogged) - new Date(a.lastLogged);
+                    });
+                    break;
+            }
+            
+            displayMissingEntries();
+        }
+
+        function searchMissingEntries() {
+            const searchTerm = document.getElementById('missingSearch').value.toLowerCase().trim();
+            
+            if (!searchTerm) {
+                // Reset to filtered data based on current filter
+                filterMissingEntries();
+                return;
+            }
+            
+            const filter = document.getElementById('missingFilter').value;
+            let baseData = filter === 'all' ? allMissingData : allMissingData.filter(p => p.severity === filter);
+            
+            filteredMissingData = baseData.filter(p => 
+                p.name.toLowerCase().includes(searchTerm) || 
+                p.flatNo.toLowerCase().includes(searchTerm)
+            );
+            
+            sortMissingEntries();
+        }
+
         // Update fun stats
         function updateFunStats(totalSteps) {
             // Constants
@@ -2086,6 +2423,7 @@
                 button.textContent = '▲ Hide Community Dashboard';
                 await loadData();
                 loadDashboard();
+                calculateMissingEntries();
             } else {
                 dashboard.classList.add('hidden');
                 button.textContent = '▼ View Community Dashboard';
