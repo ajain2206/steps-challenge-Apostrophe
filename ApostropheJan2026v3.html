@@ -2145,11 +2145,14 @@
         let filteredMissingData = [];
 
         function calculateMissingEntries() {
-            if (!participants || participants.length === 0) {
-                console.log('No participants data available');
+            if (!cachedData || !cachedData.profiles || !cachedData.steps) {
+                console.log('No cached data available for missing entries');
                 return;
             }
 
+            const profiles = cachedData.profiles;
+            const steps = cachedData.steps;
+            
             const CHALLENGE_START = new Date('2026-01-01');
             const today = new Date();
             const CHALLENGE_END = new Date('2026-01-26');
@@ -2165,17 +2168,38 @@
             
             console.log(`Checking for missing entries from ${CHALLENGE_START.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
             console.log(`Total days to check: ${allDates.length}`);
+            console.log(`Total profiles: ${profiles.length}`);
+            console.log(`Total step entries: ${steps.length}`);
+            
+            // Build a map of dates logged per participant
+            const participantDates = {};
+            const participantTotalSteps = {};
+            
+            steps.forEach(entry => {
+                const uniqueKey = entry.uniqueKey || createUniqueKey(entry.name, entry.flatNo);
+                
+                if (!participantDates[uniqueKey]) {
+                    participantDates[uniqueKey] = new Set();
+                    participantTotalSteps[uniqueKey] = 0;
+                }
+                
+                const dateKey = entry.date instanceof Date 
+                    ? entry.date.toISOString().split('T')[0]
+                    : (typeof entry.date === 'string' ? entry.date.split('T')[0] : entry.date);
+                
+                participantDates[uniqueKey].add(dateKey);
+                participantTotalSteps[uniqueKey] += entry.steps;
+            });
+            
+            console.log(`Participants with entries: ${Object.keys(participantDates).length}`);
             
             allMissingData = [];
             
-            participants.forEach(person => {
+            profiles.forEach(person => {
+                const uniqueKey = person.uniqueKey || createUniqueKey(person.name, person.flatNo);
+                
                 // Get dates this person has logged
-                const loggedDates = new Set();
-                if (dailyData[person.name]) {
-                    Object.keys(dailyData[person.name]).forEach(date => {
-                        loggedDates.add(date);
-                    });
-                }
+                const loggedDates = participantDates[uniqueKey] || new Set();
                 
                 // Find missing dates
                 const missingDates = allDates.filter(date => !loggedDates.has(date));
@@ -2207,7 +2231,7 @@
                         daysSinceLastLog: daysSinceLastLog,
                         severity: severity,
                         severityIcon: severityIcon,
-                        totalSteps: byParticipant[person.name] || 0,
+                        totalSteps: participantTotalSteps[uniqueKey] || 0,
                         daysLogged: loggedDates.size
                     });
                 }
@@ -2221,10 +2245,15 @@
             const estimatedSteps = totalMissingEntries * 10000; // Assume 10K steps per missing day
             const percentOfGoal = ((estimatedSteps / GOAL_STEPS) * 100).toFixed(1);
             
-            document.getElementById('missingParticipantsCount').textContent = allMissingData.length;
-            document.getElementById('missingEntriesCount').textContent = totalMissingEntries.toLocaleString();
-            document.getElementById('missingPotentialSteps').textContent = '~' + (estimatedSteps / 1000000).toFixed(1) + 'M';
-            document.getElementById('missingPotentialPercent').textContent = percentOfGoal + '%';
+            const participantsCountEl = document.getElementById('missingParticipantsCount');
+            const entriesCountEl = document.getElementById('missingEntriesCount');
+            const potentialStepsEl = document.getElementById('missingPotentialSteps');
+            const potentialPercentEl = document.getElementById('missingPotentialPercent');
+            
+            if (participantsCountEl) participantsCountEl.textContent = allMissingData.length;
+            if (entriesCountEl) entriesCountEl.textContent = totalMissingEntries.toLocaleString();
+            if (potentialStepsEl) potentialStepsEl.textContent = '~' + (estimatedSteps / 1000000).toFixed(1) + 'M';
+            if (potentialPercentEl) potentialPercentEl.textContent = percentOfGoal + '%';
             
             filteredMissingData = [...allMissingData];
             displayMissingEntries();
@@ -2234,7 +2263,15 @@
             const grid = document.getElementById('missingEntriesGrid');
             const summary = document.getElementById('missingSummary');
             
-            if (!grid || !summary) return;
+            console.log('displayMissingEntries called');
+            console.log('Grid element:', grid);
+            console.log('Summary element:', summary);
+            console.log('Filtered data length:', filteredMissingData.length);
+            
+            if (!grid || !summary) {
+                console.error('Missing entries grid or summary element not found!');
+                return;
+            }
             
             if (filteredMissingData.length === 0) {
                 summary.textContent = '🎉 No missing entries found! Everyone is up to date!';
@@ -2249,11 +2286,13 @@
                 (<span class="font-semibold">${totalMissing.toLocaleString()} total missing entries</span>)
             `;
             
+            console.log(`Generating ${filteredMissingData.length} cards`);
+            
             // Generate cards
             const cardsHTML = filteredMissingData.map(person => {
                 // Format missing dates
                 let datesDisplay = person.missingDates.slice(0, 15).map(d => {
-                    const date = new Date(d);
+                    const date = new Date(d + 'T00:00:00'); // Add time to avoid timezone issues
                     return `Jan ${date.getDate()}`;
                 }).join(', ');
                 
@@ -2264,7 +2303,7 @@
                 // Last logged message
                 let lastLoggedMsg = '';
                 if (person.lastLogged) {
-                    const lastDate = new Date(person.lastLogged);
+                    const lastDate = new Date(person.lastLogged + 'T00:00:00');
                     const dateStr = lastDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                     if (person.daysSinceLastLog === 0) {
                         lastLoggedMsg = `Last logged: ${dateStr} (today) ✅`;
@@ -2320,6 +2359,7 @@
             }).join('');
             
             grid.innerHTML = cardsHTML;
+            console.log('Cards HTML generated and inserted');
         }
 
         function filterMissingEntries() {
