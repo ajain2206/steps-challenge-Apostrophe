@@ -2157,8 +2157,12 @@
             const today = new Date();
             const CHALLENGE_END = new Date('2026-01-26');
             
-            // Use the earlier of today or challenge end
-            const endDate = today < CHALLENGE_END ? today : CHALLENGE_END;
+            // Only check completed days (up to yesterday, not today)
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            // Use the earlier of yesterday or challenge end
+            const endDate = yesterday < CHALLENGE_END ? yesterday : CHALLENGE_END;
             
             // Get all dates from start to end
             const allDates = [];
