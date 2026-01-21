@@ -371,6 +371,40 @@
                     </div>
                 </div>
 
+                <!-- Daily Participation Chart -->
+                <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                    <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">👥 Daily Participation - Who's Logging Steps?</h2>
+                    <div class="h-64 sm:h-80">
+                        <canvas id="dailyParticipationChart"></canvas>
+                    </div>
+                    
+                    <!-- Participation Stats Summary -->
+                    <div id="participationStatsPanel" class="mt-4 p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div class="text-center">
+                                <p class="text-xs text-gray-600">Average Daily</p>
+                                <p id="avgParticipants" class="text-base sm:text-lg font-bold text-blue-600">-</p>
+                                <p id="avgPercentage" class="text-xs text-gray-500">-</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-xs text-gray-600">Best Day</p>
+                                <p id="bestDay" class="text-base sm:text-lg font-bold text-green-600">-</p>
+                                <p id="bestDayCount" class="text-xs text-gray-500">-</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-xs text-gray-600">Lowest Day</p>
+                                <p id="lowestDay" class="text-base sm:text-lg font-bold text-orange-600">-</p>
+                                <p id="lowestDayCount" class="text-xs text-gray-500">-</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-xs text-gray-600">Yesterday</p>
+                                <p id="yesterdayParticipants" class="text-base sm:text-lg font-bold text-purple-600">-</p>
+                                <p id="yesterdayPercentage" class="text-xs text-gray-500">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Participant Leaderboard with Tabs -->
                 <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
                     <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">🏆 Participant Leaderboard</h2>
@@ -1698,6 +1732,152 @@
                         }
                     }
                 });
+            }
+
+            // Daily Participation Chart (Simplified Safe Version)
+            try {
+                const participationCtx = document.getElementById('dailyParticipationChart');
+                if (participationCtx && profiles && steps) {
+                    console.log('[Participation] Starting chart creation...');
+                    console.log('[Participation] Profiles:', profiles.length);
+                    console.log('[Participation] Steps:', steps.length);
+                    
+                    // Count participants per day
+                    const dailyParticipantCounts = {};
+                    
+                    steps.forEach(entry => {
+                        try {
+                            const dateKey = entry.date instanceof Date 
+                                ? entry.date.toISOString().split('T')[0]
+                                : String(entry.date).split('T')[0];
+                            const uniqueKey = entry.uniqueKey || createUniqueKey(entry.name, entry.flatNo);
+                            
+                            if (!dailyParticipantCounts[dateKey]) {
+                                dailyParticipantCounts[dateKey] = new Set();
+                            }
+                            dailyParticipantCounts[dateKey].add(uniqueKey);
+                        } catch (err) {
+                            // Skip problematic entries
+                        }
+                    });
+                    
+                    console.log('[Participation] Days with data:', Object.keys(dailyParticipantCounts).length);
+                    
+                    // Build chart data for all 26 days
+                    const chartLabels = [];
+                    const chartCounts = [];
+                    
+                    for (let day = 1; day <= 26; day++) {
+                        const dateStr = `2026-01-${String(day).padStart(2, '0')}`;
+                        const count = dailyParticipantCounts[dateStr] ? dailyParticipantCounts[dateStr].size : 0;
+                        
+                        chartLabels.push(`Jan ${day}`);
+                        chartCounts.push(count);
+                    }
+                    
+                    // Calculate average
+                    const nonZeroCounts = chartCounts.filter(c => c > 0);
+                    const avgCount = nonZeroCounts.length > 0 
+                        ? Math.round(nonZeroCounts.reduce((a, b) => a + b, 0) / nonZeroCounts.length)
+                        : 0;
+                    
+                    const avgLine = new Array(26).fill(avgCount);
+                    
+                    console.log('[Participation] Average:', avgCount);
+                    console.log('[Participation] Max:', Math.max(...nonZeroCounts, 0));
+                    
+                    // Update stats
+                    try {
+                        const el1 = document.getElementById('avgParticipants');
+                        if (el1) el1.textContent = avgCount;
+                        
+                        const el2 = document.getElementById('avgPercentage');
+                        if (el2) el2.textContent = `(${((avgCount/profiles.length)*100).toFixed(1)}%)`;
+                        
+                        if (nonZeroCounts.length > 0) {
+                            const maxCount = Math.max(...nonZeroCounts);
+                            const maxDay = chartCounts.indexOf(maxCount) + 1;
+                            const el3 = document.getElementById('bestDay');
+                            if (el3) el3.textContent = `Jan ${maxDay}`;
+                            const el4 = document.getElementById('bestDayCount');
+                            if (el4) el4.textContent = `${maxCount} (${((maxCount/profiles.length)*100).toFixed(1)}%)`;
+                            
+                            const minCount = Math.min(...nonZeroCounts);
+                            const minDay = chartCounts.indexOf(minCount) + 1;
+                            const el5 = document.getElementById('lowestDay');
+                            if (el5) el5.textContent = `Jan ${minDay}`;
+                            const el6 = document.getElementById('lowestDayCount');
+                            if (el6) el6.textContent = `${minCount} (${((minCount/profiles.length)*100).toFixed(1)}%)`;
+                        }
+                        
+                        // Yesterday (day 19 for today being day 20)
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        const yesterdayDay = yesterday.getDate();
+                        if (yesterdayDay >= 1 && yesterdayDay <= 26) {
+                            const el7 = document.getElementById('yesterdayParticipants');
+                            if (el7) el7.textContent = chartCounts[yesterdayDay - 1] || 0;
+                            const el8 = document.getElementById('yesterdayPercentage');
+                            if (el8) el8.textContent = `(${((chartCounts[yesterdayDay-1]/profiles.length)*100).toFixed(1)}%)`;
+                        }
+                    } catch (statsErr) {
+                        console.log('[Participation] Stats update error:', statsErr.message);
+                    }
+                    
+                    // Create chart
+                    new Chart(participationCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: chartLabels,
+                            datasets: [{
+                                label: 'Participants',
+                                data: chartCounts,
+                                backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                                borderColor: 'rgb(59, 130, 246)',
+                                borderWidth: 1
+                            }, {
+                                label: 'Average',
+                                type: 'line',
+                                data: avgLine,
+                                borderColor: 'rgb(249, 115, 22)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                pointRadius: 0,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'bottom'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Participants'
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    console.log('[Participation] Chart created successfully!');
+                }
+            } catch (error) {
+                console.error('[Participation] ERROR:', error);
+                console.error('[Participation] Stack:', error.stack);
             }
 
             // Building Statistics Table with Infographics
