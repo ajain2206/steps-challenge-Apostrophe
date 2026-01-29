@@ -6,6 +6,7 @@
     <title>Apostrophe - Jan 2026 - Community Steps Challenge</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         /* One-time bounce animation that auto-stops */
         @keyframes bounceIn {
@@ -28,14 +29,61 @@
         .bounce-once {
             animation: bounceIn 0.6s ease-out;
         }
+        
+        /* Badge Styles */
+        .badge-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .badge-card:hover {
+            transform: scale(1.05);
+        }
+        .badge-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+        .badge-name {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .badge-desc {
+            font-size: 9px;
+            color: #666;
+        }
+        .badge-gold {
+            border: 2px solid #FFD700;
+            background: linear-gradient(135deg, #FFF8DC, #FFE7BA);
+        }
+        .badge-silver {
+            border: 2px solid #C0C0C0;
+            background: linear-gradient(135deg, #F5F5F5, #E0E0E0);
+        }
+        .badge-bronze {
+            border: 2px solid #CD7F32;
+            background: linear-gradient(135deg, #FFE4B5, #F4A460);
+        }
+        .badge-green {
+            border: 2px solid #32CD32;
+            background: linear-gradient(135deg, #F0FFF0, #C1FFC1);
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-2 sm:p-4">
     <div class="max-w-6xl mx-auto">
-        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-indigo-900 mb-2 mt-4">
-            🚶 Apostrophe - Jan 2026 - Community Steps Challenge
-        </h1>
-        <p class="text-center text-gray-600 mb-4 text-sm sm:text-base">Track your daily steps with your community</p>
+        <!-- Challenge Complete Banner -->
+        <div class="bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg shadow-xl p-6 sm:p-8 mb-6 text-center">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-2">
+                🎉 CHALLENGE COMPLETE! 🎉
+            </h1>
+            <p class="text-lg sm:text-xl mb-1">Apostrophe Steps Challenge 2026</p>
+            <p class="text-sm sm:text-base opacity-90">January 1 - 26, 2026 • Final Results</p>
+        </div>
 
         <!-- Setup Notice -->
         <div id="setupNotice" class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
@@ -44,24 +92,14 @@
             </p>
         </div>
 
-        <!-- Toggle between Register and Submit -->
+        <!-- View Community Dashboard Button -->
         <div class="flex justify-center mb-6">
-            <div class="bg-white rounded-lg shadow-md p-1 inline-flex w-full max-w-md">
-                <button
-                    id="btnSubmit"
-                    onclick="showView('submit')"
-                    class="flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors bg-blue-600 text-white text-sm sm:text-base"
-                >
-                    Submit Steps
-                </button>
-                <button
-                    id="btnRegister"
-                    onclick="showView('register')"
-                    class="flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors text-gray-600 hover:bg-gray-100 text-sm sm:text-base"
-                >
-                    Register
-                </button>
-            </div>
+            <button
+                onclick="toggleDashboard()"
+                class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all text-base sm:text-lg font-bold"
+            >
+                📊 View Community Dashboard
+            </button>
         </div>
 
         <!-- Stats Cards -->
@@ -76,10 +114,10 @@
             </div>
         </div>
 
-        <!-- 10 Million Goal Progress -->
+        <!-- 20 Million Goal Progress -->
         <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
             <div class="flex items-center justify-between mb-2">
-                <h3 class="text-sm sm:text-base md:text-lg font-bold text-gray-800">🎯 Goal: 10M Steps</h3>
+                <h3 class="text-sm sm:text-base md:text-lg font-bold text-gray-800">🎯 Goal: 20M Steps</h3>
                 <span id="goalPercentage" class="text-lg sm:text-xl md:text-2xl font-bold text-indigo-600">0%</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-4 sm:h-6 mb-2">
@@ -87,7 +125,7 @@
             </div>
             <div class="flex items-center justify-between text-xs sm:text-sm text-gray-600">
                 <span id="goalCurrent">0 steps</span>
-                <span id="goalRemaining">10,000,000 to go!</span>
+                <span id="goalRemaining">20,000,000 to go!</span>
             </div>
         </div>
 
@@ -166,187 +204,68 @@
         </div>
 
         <!-- Registration Form -->
-        <div id="registerView" class="hidden">
-            <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 mb-4 sm:mb-6">
-                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">New User Registration</h2>
-                <p class="text-sm sm:text-base text-gray-600 mb-4">Register once to start tracking your steps</p>
-                <form id="registerForm" class="space-y-3 sm:space-y-4" onsubmit="handleRegister(event)">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Full Name *
-                            </label>
-                            <input
-                                type="text"
-                                id="regName"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="e.g., Ajay Kumar"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Flat Number *
-                            </label>
-                            <input
-                                type="text"
-                                id="regFlatNo"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="e.g., A-101"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Age *
-                            </label>
-                            <input
-                                type="number"
-                                id="regAge"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="e.g., 35"
-                                min="1"
-                                max="120"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Gender *
-                            </label>
-                            <select
-                                id="regGender"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            >
-                                <option value="">Select gender</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button
-                        type="submit"
-                        class="w-full bg-blue-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg"
-                    >
-                        Register
-                    </button>
-                </form>
-                <p id="registerStatus" class="text-sm mt-4 text-center"></p>
-            </div>
-
-            <!-- Registered Users List -->
-            <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6">
-                <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Registered Participants</h2>
-                <div id="registeredList" class="space-y-2 max-h-96 overflow-y-auto">
-                    <p class="text-gray-500 text-center py-4 text-sm sm:text-base">Loading...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Submit Steps Form -->
-        <div id="submitView">
-            <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 mb-4 sm:mb-6">
-                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">Submit Your Steps</h2>
-                
-                <!-- Important Notice -->
-                <div class="bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 mb-4 rounded">
-                    <p class="text-sm sm:text-base text-blue-800">
-                        <strong>💡 Important:</strong> Submit only your <strong>FINAL step count</strong> for the day. 
-                        You can only submit <strong>once per day</strong>.
-                    </p>
-                </div>
-                
-                <form id="submitForm" class="space-y-3 sm:space-y-4" onsubmit="handleSubmitSteps(event)">
-                    <div class="grid grid-cols-1 gap-3 sm:gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Date *
-                            </label>
-                            <input
-                                type="date"
-                                id="submitDate"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                                onchange="checkExistingEntry()"
-                            />
-                            <p class="text-xs text-gray-500 mt-1">💡 Select from Jan 1, 2026 onwards</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Select Your Name & Flat *
-                            </label>
-                            <select
-                                id="participantSelect"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                                onchange="checkExistingEntry()"
-                            >
-                                <option value="">-- Select from registered participants --</option>
-                            </select>
-                            <p class="text-xs text-gray-500 mt-1">💡 Don't see your name? <a href="#" onclick="showView('register'); return false;" class="text-blue-600 hover:underline font-medium">Register here</a></p>
-                        </div>
-                        
-                        <!-- Existing Entry Warning (Hidden by default) -->
-                        <div id="existingEntryWarning" class="hidden">
-                            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 sm:p-4 rounded">
-                                <div class="flex items-start">
-                                    <div class="flex-shrink-0">
-                                        <span class="text-2xl">⚠️</span>
-                                    </div>
-                                    <div class="ml-3 flex-1">
-                                        <h3 class="text-sm sm:text-base font-bold text-yellow-800 mb-2">ALREADY SUBMITTED</h3>
-                                        <div id="existingEntryDetails" class="text-xs sm:text-sm text-yellow-700 mb-2"></div>
-                                        <p class="text-xs sm:text-sm text-yellow-800">
-                                            ✅ This entry is locked. Please select a different date or verify you selected the correct name.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Steps *
-                            </label>
-                            <input
-                                type="number"
-                                id="submitSteps"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="e.g., 10000"
-                                min="0"
-                                required
-                            />
-                        </div>
-                    </div>
-                    <button
-                        type="submit"
-                        id="submitButton"
-                        class="w-full bg-blue-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-base sm:text-lg"
-                    >
-                        Submit Steps
-                    </button>
-                </form>
-                <p id="submitStatus" class="text-sm mt-4 text-center"></p>
-            </div>
-
-            <!-- Toggle Dashboard -->
-            <button
-                onclick="toggleDashboard()"
-                id="toggleBtn"
-                class="w-full bg-indigo-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-lg hover:bg-indigo-700 transition-colors font-semibold mb-4 sm:mb-6 text-base sm:text-lg"
-            >
-                ▼ View Community Dashboard
-            </button>
-
-            <!-- Dashboard -->
-            <div id="dashboard" class="hidden space-y-4 sm:space-y-6">
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="hidden space-y-4 sm:space-y-6">
                 <!-- Daily Steps Trend -->
                 <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
                     <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">📈 Daily Community Steps</h2>
                     <div class="h-64 sm:h-80">
                         <canvas id="dailyStepsChart"></canvas>
+                    </div>
+                    
+                    <!-- Daily Stats Summary -->
+                    <div id="dailyStatsPanel" class="mt-4 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="text-center">
+                                <p class="text-xs text-gray-600">Today's Steps</p>
+                                <p id="todaySteps" class="text-lg sm:text-xl font-bold text-blue-600">-</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-xs text-gray-600">Running Average</p>
+                                <p id="runningAvg" class="text-lg sm:text-xl font-bold text-green-600">-</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-xs text-gray-600">Daily Target</p>
+                                <p id="dailyTarget" class="text-lg sm:text-xl font-bold text-red-600">-</p>
+                            </div>
+                        </div>
+                        <div id="dailyStatus" class="mt-3 text-center text-sm font-medium">
+                            <!-- Status message will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Participation Chart -->
+                <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                    <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">👥 Daily Participation - Who's Logging Steps?</h2>
+                    <div class="h-64 sm:h-80">
+                        <canvas id="dailyParticipationChart"></canvas>
+                    </div>
+                    
+                    <!-- Participation Stats Summary -->
+                    <div id="participationStatsPanel" class="mt-4 p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div class="text-center">
+                                <p class="text-xs text-gray-600">Average Daily</p>
+                                <p id="avgParticipants" class="text-base sm:text-lg font-bold text-blue-600">-</p>
+                                <p id="avgPercentage" class="text-xs text-gray-500">-</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-xs text-gray-600">Best Day</p>
+                                <p id="bestDay" class="text-base sm:text-lg font-bold text-green-600">-</p>
+                                <p id="bestDayCount" class="text-xs text-gray-500">-</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-xs text-gray-600">Lowest Day</p>
+                                <p id="lowestDay" class="text-base sm:text-lg font-bold text-orange-600">-</p>
+                                <p id="lowestDayCount" class="text-xs text-gray-500">-</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-xs text-gray-600">Yesterday</p>
+                                <p id="yesterdayParticipants" class="text-base sm:text-lg font-bold text-purple-600">-</p>
+                                <p id="yesterdayPercentage" class="text-xs text-gray-500">-</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -482,8 +401,39 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
+
+        <!-- User Selector Section -->
+        <div id="userSelectorSection" class="hidden mt-8">
+            <div class="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg shadow-xl p-8 text-center">
+                <h2 class="text-2xl sm:text-3xl font-bold mb-3">🎯 GET YOUR PERSONAL SUMMARY 🎯</h2>
+                <p class="text-sm sm:text-base opacity-90 mb-6">Select your name to view your personal stats and achievements!</p>
+                
+                <div class="bg-white rounded-lg p-6 max-w-2xl mx-auto">
+                    <label class="block text-left text-gray-700 font-semibold mb-2">Select Participant:</label>
+                    <select id="userSelector" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 text-base">
+                        <option value="">-- Choose your name --</option>
+                    </select>
+                    
+                    <button
+                        onclick="generatePersonalSummary()"
+                        class="mt-6 w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                        id="generateBtn"
+                        disabled
+                    >
+                        🎊 GENERATE MY SUMMARY 🎊
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Individual Summary Section (Hidden Initially) -->
+        <div id="individualSummary" class="hidden mt-8 space-y-6">
+            <!-- Content will be populated dynamically -->
+        </div>
+
     </div>
 
     <script>
@@ -496,7 +446,7 @@
         let dailyStepsChart = null;
         let cachedData = null;
 
-        const GOAL_STEPS = 10000000; // 10 million steps goal
+        const GOAL_STEPS = 20000000; // 20 million steps goal
 
         // Helper function to create unique key from name and flat number
         function createUniqueKey(name, flatNo) {
@@ -509,20 +459,6 @@
         }
 
         // Show view
-        function showView(view) {
-            if (view === 'register') {
-                document.getElementById('registerView').classList.remove('hidden');
-                document.getElementById('submitView').classList.add('hidden');
-                document.getElementById('btnRegister').className = 'flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors bg-blue-600 text-white text-sm sm:text-base';
-                document.getElementById('btnSubmit').className = 'flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors text-gray-600 hover:bg-gray-100 text-sm sm:text-base';
-                loadRegisteredList();
-            } else {
-                document.getElementById('registerView').classList.add('hidden');
-                document.getElementById('submitView').classList.remove('hidden');
-                document.getElementById('btnSubmit').className = 'flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors bg-blue-600 text-white text-sm sm:text-base';
-                document.getElementById('btnRegister').className = 'flex-1 px-4 sm:px-6 py-3 rounded-md font-medium transition-colors text-gray-600 hover:bg-gray-100 text-sm sm:text-base';
-            }
-        }
 
         // Fetch data from Google Sheets
         async function fetchData() {
@@ -573,169 +509,13 @@
             }
         }
 
-        // Handle registration
-        async function handleRegister(event) {
-            event.preventDefault();
-            
-            const name = document.getElementById('regName').value.trim();
-            const flatNo = document.getElementById('regFlatNo').value.trim().toUpperCase();
-            const age = parseInt(document.getElementById('regAge').value);
-            const gender = document.getElementById('regGender').value;
-            
-            const result = await sendData('register', {
-                name: name,
-                flatNo: flatNo,
-                age: age,
-                gender: gender
-            });
-            
-            if (result.success) {
-                showStatus('registerStatus', result.message + ' 🎉', 'success');
-                document.getElementById('registerForm').reset();
-                
-                setTimeout(async () => {
-                    await loadData();
-                    showView('submit');
-                    document.getElementById('registerStatus').textContent = '';
-                }, 2000);
-            } else {
-                showStatus('registerStatus', result.message, 'error');
-            }
-        }
-
-        // Check if user already has entry for selected date
-        function checkExistingEntry() {
-            const dateInput = document.getElementById('submitDate');
-            const participantSelect = document.getElementById('participantSelect');
-            const stepsInput = document.getElementById('submitSteps');
-            const submitButton = document.getElementById('submitButton');
-            const warningDiv = document.getElementById('existingEntryWarning');
-            const detailsDiv = document.getElementById('existingEntryDetails');
-            
-            const selectedDate = dateInput.value;
-            const selectedValue = participantSelect.value;
-            
-            // Reset if either is not selected
-            if (!selectedDate || !selectedValue) {
-                warningDiv.classList.add('hidden');
-                stepsInput.disabled = false;
-                stepsInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
-                submitButton.disabled = false;
-                submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                return;
-            }
-            
-            const [uniqueKey, name, flatNo] = selectedValue.split('|');
-            
-            // Check if this person has entry for this date
-            if (!cachedData || !cachedData.steps) return;
-            
-            const existing = cachedData.steps.find(entry => {
-                const entryKey = entry.uniqueKey || createUniqueKey(entry.name, entry.flatNo);
-                const entryDate = typeof entry.date === 'string' ? entry.date.split('T')[0] : entry.date.toISOString().split('T')[0];
-                return entryKey === uniqueKey && entryDate === selectedDate;
-            });
-            
-            if (existing) {
-                // Show warning and disable form
-                const [year, month, day] = selectedDate.split('-');
-                const d = new Date(year, month - 1, day);
-                const formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                
-                detailsDiv.innerHTML = `
-                    <p class="font-semibold">${name} already submitted ${existing.steps.toLocaleString()} steps for ${formattedDate}</p>
-                `;
-                
-                warningDiv.classList.remove('hidden');
-                
-                // Disable steps input and submit button
-                stepsInput.disabled = true;
-                stepsInput.value = '';
-                stepsInput.classList.add('bg-gray-100', 'cursor-not-allowed');
-                
-                submitButton.disabled = true;
-                submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
-                submitButton.textContent = '🔒 Already Submitted';
-            } else {
-                // Hide warning and enable form
-                warningDiv.classList.add('hidden');
-                
-                stepsInput.disabled = false;
-                stepsInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
-                
-                submitButton.disabled = false;
-                submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                submitButton.textContent = 'Submit Steps';
-            }
-        }
-
-        // Handle submit steps
-        async function handleSubmitSteps(event) {
-            event.preventDefault();
-            
-            const selectedDate = document.getElementById('submitDate').value;
-            const selectedValue = document.getElementById('participantSelect').value;
-            const steps = parseInt(document.getElementById('submitSteps').value);
-            
-            // Parse dates as local dates to avoid timezone issues
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            // Parse the selected date as local date (not UTC)
-            const [year, month, day] = selectedDate.split('-').map(Number);
-            const submitDate = new Date(year, month - 1, day);
-            submitDate.setHours(0, 0, 0, 0);
-            
-            const minDate = new Date(2026, 0, 1); // Jan 1, 2026 in local time
-            minDate.setHours(0, 0, 0, 0);
-            
-            if (submitDate > today) {
-                showStatus('submitStatus', '❌ Cannot submit steps for future dates!', 'error');
-                return;
-            }
-            
-            if (submitDate < minDate) {
-                showStatus('submitStatus', '❌ Date must be January 1, 2026 or later!', 'error');
-                return;
-            }
-            
-            if (!selectedValue) {
-                showStatus('submitStatus', 'Please select your name from the dropdown', 'error');
-                return;
-            }
-            
-            // Parse the selected value (format: "uniqueKey|Name|FlatNo")
-            const [uniqueKey, name, flatNo] = selectedValue.split('|');
-            
-            const result = await sendData('submitSteps', {
-                date: selectedDate,
-                name: name,
-                flatNo: flatNo,
-                steps: steps
-            });
-            
-            if (result.success) {
-                showStatus('submitStatus', result.message + ' 🎉', 'success');
-                document.getElementById('submitForm').reset();
-                setDefaultDate(); // Reset date to today
-                
-                setTimeout(async () => {
-                    await loadData();
-                    document.getElementById('submitStatus').textContent = '';
-                }, 2000);
-            } else {
-                showStatus('submitStatus', result.message, 'error');
-            }
-        }
-
-        // Show status message
+        // Show status message (kept for compatibility)
         function showStatus(elementId, message, type) {
             const element = document.getElementById(elementId);
-            element.textContent = message;
-            element.className = `text-sm mt-4 text-center ${type === 'success' ? 'text-green-600' : 'text-red-600'}`;
+            if (element) {
+                element.textContent = message;
+                element.className = `text-sm mt-4 text-center ${type === 'success' ? 'text-green-600' : 'text-red-600'}`;
+            }
         }
 
         // Get age group
@@ -745,22 +525,6 @@
             if (age <= 45) return '31-45';
             if (age <= 60) return '46-60';
             return 'Over 60';
-        }
-
-        // Set default date to today
-        function setDefaultDate() {
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            const todayStr = `${yyyy}-${mm}-${dd}`;
-            
-            const dateInput = document.getElementById('submitDate');
-            if (dateInput) {
-                dateInput.value = todayStr;
-                dateInput.max = todayStr; // Prevent selecting future dates
-                dateInput.min = '2026-01-01'; // Minimum date is Jan 1, 2026
-            }
         }
 
         // Load all data
@@ -1220,24 +984,6 @@
         }
 
         // Load registered list
-        function loadRegisteredList() {
-            if (!cachedData) return;
-            
-            const profiles = cachedData.profiles;
-            
-            const listHtml = profiles.length > 0
-                ? profiles.map(profile => `
-                    <div class="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
-                        <div>
-                            <p class="font-semibold text-gray-800 text-sm sm:text-base">${profile.name}</p>
-                            <p class="text-xs sm:text-sm text-gray-600">Flat ${profile.flatNo} • ${profile.age} years • ${profile.gender}</p>
-                        </div>
-                    </div>
-                `).join('')
-                : '<p class="text-gray-500 text-center py-4 text-sm sm:text-base">No participants registered yet</p>';
-            
-            document.getElementById('registeredList').innerHTML = listHtml;
-        }
 
         // Load dashboard
         function loadDashboard() {
@@ -1385,7 +1131,7 @@
                 console.log(`Building ${building}: Total: ${totalSteps}, Participants: ${participantCount}, Daily avg: ${dailyAvgSteps}, Per participant: ${participantAvgSteps}, Daily per participant: ${dailyPerParticipantAvg}`);
             });
 
-            // Daily steps chart
+            // Daily steps chart with average and target
             const dailyCtx = document.getElementById('dailyStepsChart').getContext('2d');
             if (dailyStepsChart) dailyStepsChart.destroy();
             
@@ -1398,8 +1144,79 @@
                 // Get last 30 days or all available data
                 const recentDaily = sortedDaily.slice(-30);
                 
+                // Calculate running average for each day
+                const runningAverages = [];
+                let cumulativeSteps = 0;
+                recentDaily.forEach(([date, steps], index) => {
+                    cumulativeSteps += steps;
+                    const avg = Math.round(cumulativeSteps / (index + 1));
+                    runningAverages.push(avg);
+                });
+                
+                // Calculate DYNAMIC daily target based on remaining steps and days
+                // Challenge runs from Jan 1 to Jan 26, 2026 (26 days)
+                const CHALLENGE_START = new Date('2026-01-01');
+                const CHALLENGE_END = new Date('2026-01-26');
+                const TOTAL_CHALLENGE_DAYS = 26;
+                
+                const dynamicTargets = [];
+                let cumulativeForTarget = 0;
+                
+                recentDaily.forEach(([dateStr, steps], index) => {
+                    // Calculate cumulative steps up to (but not including) this day
+                    // This represents what we had accomplished before this day started
+                    
+                    // Calculate which day of challenge this is (1-26)
+                    const currentDate = new Date(dateStr);
+                    const dayNumber = Math.floor((currentDate - CHALLENGE_START) / (1000 * 60 * 60 * 24)) + 1;
+                    
+                    // Calculate remaining steps and days BEFORE this day's steps were logged
+                    const remainingSteps = GOAL_STEPS - cumulativeForTarget;
+                    const remainingDays = TOTAL_CHALLENGE_DAYS - dayNumber + 1; // +1 because this day is included
+                    
+                    // Calculate what the target should be for this day
+                    const targetForDay = remainingDays > 0 ? Math.round(remainingSteps / remainingDays) : 0;
+                    dynamicTargets.push(targetForDay);
+                    
+                    // Add this day's steps to cumulative for next iteration
+                    cumulativeForTarget += steps;
+                });
+                
+                // Get the CURRENT daily target (today's target)
+                const currentDailyTarget = dynamicTargets[dynamicTargets.length - 1];
+                
+                // Update stats panel
+                const todaySteps = recentDaily[recentDaily.length - 1][1];
+                const currentAvg = runningAverages[runningAverages.length - 1];
+                
+                document.getElementById('todaySteps').textContent = todaySteps.toLocaleString();
+                document.getElementById('runningAvg').textContent = currentAvg.toLocaleString() + '/day';
+                document.getElementById('dailyTarget').textContent = currentDailyTarget.toLocaleString() + '/day';
+                
+                // Calculate status message
+                const vsAvg = todaySteps - currentAvg;
+                const vsTarget = todaySteps - currentDailyTarget;
+                let statusMsg = '';
+                let statusClass = '';
+                
+                if (vsTarget >= 0 && vsAvg >= 0) {
+                    statusMsg = `🟢 Excellent! Today is +${vsAvg.toLocaleString()} vs average and +${vsTarget.toLocaleString()} vs target`;
+                    statusClass = 'text-green-600';
+                } else if (vsTarget >= 0) {
+                    statusMsg = `✅ Good! Above target by ${vsTarget.toLocaleString()} steps`;
+                    statusClass = 'text-green-600';
+                } else if (vsAvg >= 0) {
+                    statusMsg = `📊 Above average by ${vsAvg.toLocaleString()}, but ${Math.abs(vsTarget).toLocaleString()} below target`;
+                    statusClass = 'text-yellow-600';
+                } else {
+                    statusMsg = `⚠️ Below both average (${Math.abs(vsAvg).toLocaleString()}) and target (${Math.abs(vsTarget).toLocaleString()})`;
+                    statusClass = 'text-red-600';
+                }
+                
+                document.getElementById('dailyStatus').innerHTML = `<span class="${statusClass}">${statusMsg}</span>`;
+                
                 dailyStepsChart = new Chart(dailyCtx, {
-                    type: 'line',
+                    type: 'bar',
                     data: {
                         labels: recentDaily.map(([date]) => {
                             // Parse date as local date to avoid timezone issues
@@ -1417,27 +1234,76 @@
                             
                             return label;
                         }),
-                        datasets: [{
-                            label: 'Daily Steps',
-                            data: recentDaily.map(([_, steps]) => steps),
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderColor: '#3b82f6',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        }]
+                        datasets: [
+                            {
+                                label: 'Daily Steps',
+                                data: recentDaily.map(([_, steps]) => steps),
+                                type: 'bar',
+                                backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                                borderColor: 'rgb(59, 130, 246)',
+                                borderWidth: 1,
+                                order: 3
+                            },
+                            {
+                                label: 'Running Average',
+                                data: runningAverages,
+                                type: 'line',
+                                borderColor: 'rgb(34, 197, 94)',
+                                backgroundColor: 'transparent',
+                                borderWidth: 2,
+                                pointRadius: 3,
+                                pointBackgroundColor: 'rgb(34, 197, 94)',
+                                tension: 0.4,
+                                order: 2
+                            },
+                            {
+                                label: 'Daily Target',
+                                data: dynamicTargets,
+                                type: 'line',
+                                borderColor: 'rgb(239, 68, 68)',
+                                backgroundColor: 'transparent',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                pointRadius: 0,
+                                tension: 0.2,  // Slight curve since target changes over time
+                                order: 1
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                display: false
+                                display: true,
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 15,
+                                    font: {
+                                        size: 11
+                                    }
+                                }
                             },
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {
-                                        return 'Steps: ' + context.parsed.y.toLocaleString();
+                                        const label = context.dataset.label || '';
+                                        const value = context.parsed.y.toLocaleString();
+                                        
+                                        if (label === 'Daily Steps') {
+                                            const avg = runningAverages[context.dataIndex];
+                                            const target = dynamicTargets[context.dataIndex];
+                                            const vsAvg = context.parsed.y - avg;
+                                            const vsTarget = context.parsed.y - target;
+                                            return [
+                                                `${label}: ${value}`,
+                                                `vs Average: ${vsAvg >= 0 ? '+' : ''}${vsAvg.toLocaleString()}`,
+                                                `vs Target: ${vsTarget >= 0 ? '+' : ''}${vsTarget.toLocaleString()}`
+                                            ];
+                                        }
+                                        
+                                        return `${label}: ${value}`;
                                     }
                                 }
                             }
@@ -1447,7 +1313,7 @@
                                 beginAtZero: true,
                                 ticks: {
                                     callback: function(value) {
-                                        return value.toLocaleString();
+                                        return value >= 1000 ? (value / 1000) + 'K' : value;
                                     }
                                 }
                             },
@@ -1460,6 +1326,157 @@
                         }
                     }
                 });
+            }
+
+            // Daily Participation Chart (Simplified Safe Version)
+            try {
+                const participationCtx = document.getElementById('dailyParticipationChart');
+                if (participationCtx && cachedData && cachedData.profiles && cachedData.steps) {
+                    console.log('[Participation] Starting chart creation...');
+                    console.log('[Participation] Profiles:', cachedData.profiles.length);
+                    console.log('[Participation] Steps:', cachedData.steps.length);
+                    
+                    const allProfiles = cachedData.profiles;
+                    const allSteps = cachedData.steps;
+                    
+                    // Count participants per day
+                    const dailyParticipantCounts = {};
+                    
+                    allSteps.forEach(entry => {
+                        try {
+                            const dateKey = entry.date instanceof Date 
+                                ? entry.date.toISOString().split('T')[0]
+                                : String(entry.date).split('T')[0];
+                            const uniqueKey = entry.uniqueKey || createUniqueKey(entry.name, entry.flatNo);
+                            
+                            if (!dailyParticipantCounts[dateKey]) {
+                                dailyParticipantCounts[dateKey] = new Set();
+                            }
+                            dailyParticipantCounts[dateKey].add(uniqueKey);
+                        } catch (err) {
+                            // Skip problematic entries
+                        }
+                    });
+                    
+                    console.log('[Participation] Days with data:', Object.keys(dailyParticipantCounts).length);
+                    
+                    // Build chart data for all 26 days
+                    const chartLabels = [];
+                    const chartCounts = [];
+                    
+                    for (let day = 1; day <= 26; day++) {
+                        const dateStr = `2026-01-${String(day).padStart(2, '0')}`;
+                        const count = dailyParticipantCounts[dateStr] ? dailyParticipantCounts[dateStr].size : 0;
+                        
+                        chartLabels.push(`Jan ${day}`);
+                        chartCounts.push(count);
+                    }
+                    
+                    // Calculate average
+                    const nonZeroCounts = chartCounts.filter(c => c > 0);
+                    const avgCount = nonZeroCounts.length > 0 
+                        ? Math.round(nonZeroCounts.reduce((a, b) => a + b, 0) / nonZeroCounts.length)
+                        : 0;
+                    
+                    const avgLine = new Array(26).fill(avgCount);
+                    
+                    console.log('[Participation] Average:', avgCount);
+                    console.log('[Participation] Max:', Math.max(...nonZeroCounts, 0));
+                    
+                    // Update stats
+                    try {
+                        const totalProfiles = allProfiles.length;
+                        
+                        const el1 = document.getElementById('avgParticipants');
+                        if (el1) el1.textContent = avgCount;
+                        
+                        const el2 = document.getElementById('avgPercentage');
+                        if (el2) el2.textContent = `(${((avgCount/totalProfiles)*100).toFixed(1)}%)`;
+                        
+                        if (nonZeroCounts.length > 0) {
+                            const maxCount = Math.max(...nonZeroCounts);
+                            const maxDay = chartCounts.indexOf(maxCount) + 1;
+                            const el3 = document.getElementById('bestDay');
+                            if (el3) el3.textContent = `Jan ${maxDay}`;
+                            const el4 = document.getElementById('bestDayCount');
+                            if (el4) el4.textContent = `${maxCount} (${((maxCount/totalProfiles)*100).toFixed(1)}%)`;
+                            
+                            const minCount = Math.min(...nonZeroCounts);
+                            const minDay = chartCounts.indexOf(minCount) + 1;
+                            const el5 = document.getElementById('lowestDay');
+                            if (el5) el5.textContent = `Jan ${minDay}`;
+                            const el6 = document.getElementById('lowestDayCount');
+                            if (el6) el6.textContent = `${minCount} (${((minCount/totalProfiles)*100).toFixed(1)}%)`;
+                        }
+                        
+                        // Yesterday (day 19 for today being day 20)
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        const yesterdayDay = yesterday.getDate();
+                        if (yesterdayDay >= 1 && yesterdayDay <= 26) {
+                            const el7 = document.getElementById('yesterdayParticipants');
+                            if (el7) el7.textContent = chartCounts[yesterdayDay - 1] || 0;
+                            const el8 = document.getElementById('yesterdayPercentage');
+                            if (el8) el8.textContent = `(${((chartCounts[yesterdayDay-1]/totalProfiles)*100).toFixed(1)}%)`;
+                        }
+                    } catch (statsErr) {
+                        console.log('[Participation] Stats update error:', statsErr.message);
+                    }
+                    
+                    // Create chart
+                    new Chart(participationCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: chartLabels,
+                            datasets: [{
+                                label: 'Participants',
+                                data: chartCounts,
+                                backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                                borderColor: 'rgb(59, 130, 246)',
+                                borderWidth: 1
+                            }, {
+                                label: 'Average',
+                                type: 'line',
+                                data: avgLine,
+                                borderColor: 'rgb(249, 115, 22)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                pointRadius: 0,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'bottom'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Participants'
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    console.log('[Participation] Chart created successfully!');
+                }
+            } catch (error) {
+                console.error('[Participation] ERROR:', error);
+                console.error('[Participation] Stack:', error.stack);
             }
 
             // Building Statistics Table with Infographics
@@ -1938,16 +1955,17 @@
         // Toggle dashboard
         async function toggleDashboard() {
             const dashboard = document.getElementById('dashboard');
-            const button = document.getElementById('toggleBtn');
+            const userSelector = document.getElementById('userSelectorSection');
             
             if (dashboard.classList.contains('hidden')) {
                 dashboard.classList.remove('hidden');
-                button.textContent = '▲ Hide Community Dashboard';
+                userSelector.classList.remove('hidden');
                 await loadData();
                 loadDashboard();
+                populateUserSelector();
             } else {
                 dashboard.classList.add('hidden');
-                button.textContent = '▼ View Community Dashboard';
+                userSelector.classList.add('hidden');
             }
         }
 
@@ -1990,10 +2008,38 @@
             },
             {
                 steps: 10000000,
+                icon: '🌟',
+                title: '10 Million Steps!',
+                message: 'Halfway to our goal! Momentum is building! 🚀',
+                stats: ['7,620 km covered', '17,318 loops of Apostrophe', '540% to Mumbai', '500,000 calories burned', '698 trees equivalent']
+            },
+            {
+                steps: 12500000,
+                icon: '💪',
+                title: '12.5 Million Steps!',
+                message: '62.5% complete! Keep the energy high!',
+                stats: ['9,525 km covered', '21,648 loops of Apostrophe', '675% to Mumbai', '625,000 calories burned', '873 trees equivalent']
+            },
+            {
+                steps: 15000000,
+                icon: '🔥',
+                title: '15 Million Steps!',
+                message: 'Three-quarters done! The finish line is approaching! 🎯',
+                stats: ['11,430 km covered', '25,977 loops of Apostrophe', '810% to Mumbai', '750,000 calories burned', '1,047 trees equivalent']
+            },
+            {
+                steps: 17500000,
+                icon: '⭐',
+                title: '17.5 Million Steps!',
+                message: '87.5% complete! Final push to the goal!',
+                stats: ['13,335 km covered', '30,307 loops of Apostrophe', '945% to Mumbai', '875,000 calories burned', '1,222 trees equivalent']
+            },
+            {
+                steps: 20000000,
                 icon: '🥳',
                 title: 'GOAL ACHIEVED!!!',
-                message: '10 MILLION STEPS! WE DID IT TOGETHER! 🎉🎉🎉',
-                stats: ['7,620 km covered', '17,318 loops of Apostrophe', '540% to Mumbai', '500,000 calories burned', '698 trees equivalent', '76 trips to space!']
+                message: '20 MILLION STEPS! WE DID IT TOGETHER! 🎉🎉🎉',
+                stats: ['15,240 km covered', '34,636 loops of Apostrophe', '1,080% to Mumbai', '1,000,000 calories burned', '1,396 trees equivalent', '152 trips to space!']
             }
         ];
 
@@ -2069,10 +2115,759 @@
                 document.getElementById('setupNotice').classList.add('hidden');
             }
             
-            setDefaultDate(); // Set date input to today
-            await loadData();
-            showView('submit');
+            // Enable generate button when user selects someone
+            const userSelector = document.getElementById('userSelector');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            if (userSelector && generateBtn) {
+                userSelector.addEventListener('change', function() {
+                    generateBtn.disabled = !this.value;
+                });
+            }
         };
+        
+        // ============================================
+        // NEW FUNCTIONS FOR PERSONAL SUMMARY
+        // ============================================
+        
+        function populateUserSelector() {
+            if (!cachedData || !cachedData.profiles) return;
+            
+            const selector = document.getElementById('userSelector');
+            if (!selector) return;
+            
+            // Clear existing options except the first one
+            selector.innerHTML = '<option value="">-- Choose your name --</option>';
+            
+            // Sort profiles alphabetically
+            const sortedProfiles = [...cachedData.profiles].sort((a, b) => 
+                a.name.localeCompare(b.name)
+            );
+            
+            // Add all participants
+            sortedProfiles.forEach(profile => {
+                const option = document.createElement('option');
+                const uniqueKey = createUniqueKey(profile.name, profile.flatNo);
+                option.value = uniqueKey;
+                option.textContent = `${profile.name} (${profile.flatNo})`;
+                selector.appendChild(option);
+            });
+        }
+        
+        function generatePersonalSummary() {
+            const selector = document.getElementById('userSelector');
+            if (!selector || !selector.value || !cachedData) return;
+            
+            const uniqueKey = selector.value;
+            
+            // Find the selected profile
+            const profile = cachedData.profiles.find(p => 
+                createUniqueKey(p.name, p.flatNo) === uniqueKey
+            );
+            
+            if (!profile) {
+                alert('Profile not found!');
+                return;
+            }
+            
+            // Calculate user stats
+            const userData = calculateUserStats(profile);
+            
+            // Calculate badges
+            const badges = calculateBadges(userData);
+            
+            // Generate personalized message
+            const message = generateMessage(userData);
+            
+            // Render the summary
+            renderPersonalSummary(userData, badges, message);
+            
+            // Scroll to summary
+            setTimeout(() => {
+                document.getElementById('individualSummary').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 100);
+        }
+        
+        function calculateUserStats(profile) {
+            const uniqueKey = createUniqueKey(profile.name, profile.flatNo);
+            
+            // Get all steps for this user
+            const userSteps = cachedData.steps.filter(entry => {
+                const entryKey = entry.uniqueKey || createUniqueKey(entry.name, entry.flatNo);
+                return entryKey === uniqueKey;
+            });
+            
+            // Calculate total and average
+            const totalSteps = userSteps.reduce((sum, entry) => sum + (parseInt(entry.steps) || 0), 0);
+            const daysLogged = userSteps.length;
+            const avgDaily = daysLogged > 0 ? Math.round(totalSteps / daysLogged) : 0;
+            
+            // Find best day
+            let bestDay = { steps: 0, date: '' };
+            userSteps.forEach(entry => {
+                if (entry.steps > bestDay.steps) {
+                    bestDay = { steps: entry.steps, date: entry.date };
+                }
+            });
+            
+            // Calculate overall rank
+            const allTotals = cachedData.profiles.map(p => {
+                const pKey = createUniqueKey(p.name, p.flatNo);
+                const pSteps = cachedData.steps.filter(e => {
+                    const eKey = e.uniqueKey || createUniqueKey(e.name, e.flatNo);
+                    return eKey === pKey;
+                });
+                return {
+                    uniqueKey: pKey,
+                    name: p.name,
+                    profile: p,
+                    total: pSteps.reduce((sum, e) => sum + (parseInt(e.steps) || 0), 0)
+                };
+            }).sort((a, b) => b.total - a.total);
+            
+            const rank = allTotals.findIndex(p => p.uniqueKey === uniqueKey) + 1;
+            
+            // Calculate BUILDING RANK
+            const building = profile.flatNo.charAt(0);
+            const buildingParticipants = allTotals.filter(p => p.profile.flatNo.charAt(0) === building);
+            const buildingRank = buildingParticipants.findIndex(p => p.uniqueKey === uniqueKey) + 1;
+            
+            // Calculate AGE GROUP RANK
+            const userAgeGroup = getAgeGroup(profile.age);
+            const ageGroupParticipants = allTotals.filter(p => getAgeGroup(p.profile.age) === userAgeGroup);
+            const ageGroupRank = ageGroupParticipants.findIndex(p => p.uniqueKey === uniqueKey) + 1;
+            
+            // Calculate WEEKLY BREAKDOWN
+            const weeklyData = [];
+            const weeks = [
+                { name: 'Week 1', start: '2026-01-01', end: '2026-01-07', days: 7 },
+                { name: 'Week 2', start: '2026-01-08', end: '2026-01-14', days: 7 },
+                { name: 'Week 3', start: '2026-01-15', end: '2026-01-21', days: 7 },
+                { name: 'Week 4', start: '2026-01-22', end: '2026-01-26', days: 5 }
+            ];
+            
+            weeks.forEach(week => {
+                const weekSteps = userSteps.filter(entry => {
+                    const entryDate = typeof entry.date === 'string' ? entry.date.split('T')[0] : entry.date;
+                    return entryDate >= week.start && entryDate <= week.end;
+                });
+                
+                const weekTotal = weekSteps.reduce((sum, e) => sum + (parseInt(e.steps) || 0), 0);
+                const weekDays = weekSteps.length;
+                const weekAvg = weekDays > 0 ? Math.round(weekTotal / weekDays) : 0;
+                
+                weeklyData.push({
+                    name: week.name,
+                    total: weekTotal,
+                    daysLogged: weekDays,
+                    avgDaily: weekAvg,
+                    maxDays: week.days
+                });
+            });
+            
+            // Calculate CONSISTENCY (variance in daily steps)
+            if (userSteps.length >= 10) {
+                const stepCounts = userSteps.map(e => e.steps);
+                const mean = stepCounts.reduce((a, b) => a + b, 0) / stepCounts.length;
+                const variance = stepCounts.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / stepCounts.length;
+                const stdDev = Math.sqrt(variance);
+                const coefficientOfVariation = (stdDev / mean) * 100;
+                
+                // Lower CV = higher consistency
+                let consistency = 'medium';
+                if (coefficientOfVariation < 20) consistency = 'high';
+                else if (coefficientOfVariation > 40) consistency = 'low';
+                
+                var consistencyValue = consistency;
+                var consistencyScore = coefficientOfVariation;
+            } else {
+                var consistencyValue = 'medium';
+                var consistencyScore = null;
+            }
+            
+            // Calculate community average
+            const communityTotal = cachedData.steps.reduce((sum, entry) => sum + (parseInt(entry.steps) || 0), 0);
+            const communityAvg = Math.round(communityTotal / cachedData.profiles.length);
+            
+            // Calculate distance and calories
+            const distance = (totalSteps * 0.762 / 1000).toFixed(1); // km
+            const calories = Math.round(totalSteps * 0.05);
+            
+            return {
+                profile,
+                uniqueKey,
+                totalSteps,
+                daysLogged,
+                avgDaily,
+                bestDay,
+                rank,
+                totalParticipants: cachedData.profiles.length,
+                communityAvg,
+                distance,
+                calories,
+                userSteps,
+                buildingRank,
+                ageGroupRank,
+                weeklyData,
+                consistency: consistencyValue,
+                consistencyScore
+            };
+        }
+        
+        function calculateBadges(userData) {
+            const badges = [];
+            const { rank, totalSteps, daysLogged, avgDaily, totalParticipants, profile } = userData;
+            
+            // Performance badges
+            if (rank === 1) badges.push({ icon: '🥇', name: 'Challenge Champion', desc: '#1 Overall', tier: 'gold' });
+            else if (rank === 2) badges.push({ icon: '🥈', name: 'Silver Medalist', desc: '#2 Overall', tier: 'silver' });
+            else if (rank === 3) badges.push({ icon: '🥉', name: 'Bronze Medalist', desc: '#3 Overall', tier: 'bronze' });
+            else if (rank <= 10) badges.push({ icon: '⭐', name: 'Top 10 Elite', desc: `Rank #${rank}`, tier: 'silver' });
+            else if (rank <= Math.ceil(totalParticipants * 0.25)) badges.push({ icon: '💪', name: 'Top 25% Achiever', desc: `Top Quarter`, tier: 'bronze' });
+            else if (rank <= Math.ceil(totalParticipants * 0.5)) badges.push({ icon: '🎯', name: 'Top 50%', desc: `Upper Half`, tier: 'green' });
+            
+            // Consistency badges
+            if (daysLogged === 26) badges.push({ icon: '💎', name: 'Perfect Attendance', desc: '26/26 Days', tier: 'gold' });
+            else if (daysLogged >= 24) badges.push({ icon: '✨', name: 'Near Perfect', desc: `${daysLogged}/26 Days`, tier: 'silver' });
+            else if (daysLogged >= 20) badges.push({ icon: '🎯', name: 'Strong Commitment', desc: `${daysLogged} Days`, tier: 'bronze' });
+            else if (daysLogged >= 15) badges.push({ icon: '📅', name: 'Good Participation', desc: `${daysLogged} Days`, tier: 'green' });
+            
+            // Milestone badges
+            if (totalSteps >= 500000) badges.push({ icon: '🌟', name: 'Half Million Club', desc: '500K+ Steps', tier: 'gold' });
+            else if (totalSteps >= 400000) badges.push({ icon: '💎', name: '400K Achiever', desc: '400K Steps', tier: 'silver' });
+            else if (totalSteps >= 300000) badges.push({ icon: '✨', name: '300K Milestone', desc: '300K Steps', tier: 'bronze' });
+            else if (totalSteps >= 200000) badges.push({ icon: '⭐', name: '200K Club', desc: '200K Steps', tier: 'bronze' });
+            else if (totalSteps >= 100000) badges.push({ icon: '🎯', name: '100K Starter', desc: '100K Steps', tier: 'green' });
+            
+            // Daily average badges
+            if (avgDaily >= 20000) badges.push({ icon: '🚀', name: '20K+ Daily', desc: `${avgDaily.toLocaleString()}/day`, tier: 'gold' });
+            else if (avgDaily >= 15000) badges.push({ icon: '🔥', name: '15K+ Daily', desc: `${avgDaily.toLocaleString()}/day`, tier: 'silver' });
+            else if (avgDaily >= 10000) badges.push({ icon: '💪', name: '10K+ Daily', desc: `${avgDaily.toLocaleString()}/day`, tier: 'bronze' });
+            else if (avgDaily >= 5000) badges.push({ icon: '🏃', name: '5K+ Daily', desc: `${avgDaily.toLocaleString()}/day`, tier: 'green' });
+            
+            // Distance badges
+            if (parseFloat(userData.distance) >= 350) badges.push({ icon: '🌍', name: 'World Traveler', desc: `${userData.distance} km`, tier: 'gold' });
+            else if (parseFloat(userData.distance) >= 300) badges.push({ icon: '🗺️', name: 'Distance Champion', desc: `${userData.distance} km`, tier: 'silver' });
+            else if (parseFloat(userData.distance) >= 250) badges.push({ icon: '👟', name: 'Shoe Destroyer', desc: 'Need new shoes!', tier: 'bronze' });
+            
+            // BUILDING CHAMPION BADGE
+            if (userData.buildingRank === 1) {
+                const building = profile.flatNo.charAt(0);
+                badges.push({ icon: '🏢', name: 'Building Champion', desc: `Building ${building} #1`, tier: 'gold' });
+            } else if (userData.buildingRank && userData.buildingRank <= 3) {
+                const building = profile.flatNo.charAt(0);
+                badges.push({ icon: '🏅', name: 'Building Top 3', desc: `Building ${building}`, tier: 'silver' });
+            }
+            
+            // AGE GROUP CHAMPION BADGE
+            if (userData.ageGroupRank === 1) {
+                const ageGroup = getAgeGroup(profile.age);
+                badges.push({ icon: '👑', name: 'Age Group Champion', desc: `${ageGroup} #1`, tier: 'gold' });
+            } else if (userData.ageGroupRank && userData.ageGroupRank <= 3) {
+                const ageGroup = getAgeGroup(profile.age);
+                badges.push({ icon: '🏆', name: 'Age Group Top 3', desc: ageGroup, tier: 'silver' });
+            }
+            
+            // IMPROVEMENT BADGES (based on weekly breakdown)
+            if (userData.weeklyData && userData.weeklyData.length >= 2) {
+                const week1Avg = userData.weeklyData[0].avgDaily;
+                const lastWeekAvg = userData.weeklyData[userData.weeklyData.length - 1].avgDaily;
+                const improvement = ((lastWeekAvg - week1Avg) / week1Avg) * 100;
+                
+                if (improvement >= 50) {
+                    badges.push({ icon: '📈', name: 'Most Improved', desc: `+${Math.round(improvement)}%`, tier: 'gold' });
+                } else if (improvement >= 25) {
+                    badges.push({ icon: '⬆️', name: 'Getting Stronger', desc: `+${Math.round(improvement)}%`, tier: 'silver' });
+                }
+                
+                // Comeback Warrior - struggled then finished strong
+                if (improvement >= 30 && lastWeekAvg >= 15000) {
+                    badges.push({ icon: '💪', name: 'Comeback Warrior', desc: 'Strong Finish', tier: 'silver' });
+                }
+            }
+            
+            // CONSISTENCY BADGE
+            if (userData.consistency && userData.consistency === 'high') {
+                badges.push({ icon: '🎯', name: 'Mr./Ms. Consistency', desc: 'Rock Solid', tier: 'silver' });
+            }
+            
+            // Calories Badge
+            if (userData.calories >= 25000) badges.push({ icon: '🔥', name: 'Calorie Crusher', desc: `${userData.calories.toLocaleString()} kcal`, tier: 'bronze' });
+            
+            // Team player (everyone gets this)
+            badges.push({ icon: '🤝', name: 'Team Player', desc: 'Community Spirit', tier: 'green' });
+            
+            return badges.slice(0, 15); // Max 15 badges now
+        }
+        
+        function generateMessage(userData) {
+            const { rank, totalSteps, daysLogged, avgDaily, profile, totalParticipants } = userData;
+            
+            let message = '';
+            
+            // Opening based on rank
+            if (rank === 1) {
+                message = `${profile.name}, you absolutely CRUSHED this challenge! 🎉\n\n`;
+                message += `Not only did you finish #1 overall with ${totalSteps.toLocaleString()} steps, but you `;
+                if (daysLogged === 26) {
+                    message += `showed incredible consistency by logging every single day without fail! `;
+                } else {
+                    message += `maintained an impressive ${avgDaily.toLocaleString()} steps per active day! `;
+                }
+                message += `Your dedication inspired many others to keep going.\n\n`;
+                message += `As our Challenge Champion, you've set a new standard for what's possible. Thank you for leading Apostrophe by example! 🏆💪`;
+            }
+            else if (rank <= 3) {
+                message = `${profile.name}, outstanding performance! ${rank === 2 ? '🥈' : '🥉'}\n\n`;
+                message += `Finishing #${rank} out of ${totalParticipants} participants with ${totalSteps.toLocaleString()} steps is incredible! `;
+                if (daysLogged === 26) {
+                    message += `Your perfect attendance shows exceptional commitment. `;
+                }
+                message += `\n\nYou proved that dedication and consistency pay off. Thank you for inspiring our community! 💪`;
+            }
+            else if (rank <= 10) {
+                message = `${profile.name}, excellent work! ⭐\n\n`;
+                message += `Finishing in the top 10 (#${rank} of ${totalParticipants}) puts you among the elite performers. `;
+                message += `Your ${totalSteps.toLocaleString()} steps over ${daysLogged} days demonstrate serious commitment.\n\n`;
+                message += `You're a driving force in our community's success! 🌟`;
+            }
+            else if (rank <= Math.ceil(totalParticipants * 0.25)) {
+                message = `${profile.name}, great job! 💪\n\n`;
+                message += `Ranking in the top 25% is a significant achievement! Your ${totalSteps.toLocaleString()} steps show real dedication. `;
+                if (daysLogged >= 20) {
+                    message += `Your consistency over ${daysLogged} days is impressive. `;
+                }
+                message += `\n\nThank you for being a strong contributor to our community! ✨`;
+            }
+            else {
+                message = `${profile.name}, thank you for participating! 🌟\n\n`;
+                message += `Your ${totalSteps.toLocaleString()} steps over ${daysLogged} days made a real contribution to our community's success. `;
+                message += `Every step counts, and you added yours!\n\n`;
+                message += `This challenge was about community and health, and you showed up. Thank you! 💚`;
+            }
+            
+            // Add special recognition for perfect attendance
+            if (daysLogged === 26 && rank > 3) {
+                message += `\n\n✨ SPECIAL RECOGNITION: Perfect Attendance! ✨\n`;
+                message += `You logged steps every single day without fail. This demonstrates exceptional discipline!`;
+            }
+            
+            return message;
+        }
+        
+        function renderPersonalSummary(userData, badges, message) {
+            const summaryDiv = document.getElementById('individualSummary');
+            if (!summaryDiv) return;
+            
+            const { profile, rank, totalSteps, daysLogged, avgDaily, distance, calories, bestDay, communityAvg } = userData;
+            
+            // Determine medal emoji
+            let medalEmoji = '';
+            if (rank === 1) medalEmoji = '🥇';
+            else if (rank === 2) medalEmoji = '🥈';
+            else if (rank === 3) medalEmoji = '🥉';
+            
+            const html = `
+                <!-- Personal Header -->
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg shadow-xl p-8 text-center">
+                    <h2 class="text-3xl sm:text-4xl font-bold mb-2">${medalEmoji} ${profile.name} ${medalEmoji}</h2>
+                    <p class="text-xl mb-1">Flat ${profile.flatNo} • Building ${profile.flatNo.charAt(0)}</p>
+                    <p class="text-2xl font-bold">Rank: #${rank} of ${userData.totalParticipants}</p>
+                </div>
+                
+                <!-- Personal Stats Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-lg shadow-lg p-6 text-center border-l-4 border-blue-500">
+                        <div class="text-3xl mb-2">📊</div>
+                        <p class="text-gray-600 text-sm">Total Steps</p>
+                        <p class="text-2xl font-bold text-blue-600">${totalSteps.toLocaleString()}</p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-lg p-6 text-center border-l-4 border-green-500">
+                        <div class="text-3xl mb-2">📅</div>
+                        <p class="text-gray-600 text-sm">Days Logged</p>
+                        <p class="text-2xl font-bold text-green-600">${daysLogged}/26</p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-lg p-6 text-center border-l-4 border-purple-500">
+                        <div class="text-3xl mb-2">💪</div>
+                        <p class="text-gray-600 text-sm">Daily Average</p>
+                        <p class="text-2xl font-bold text-purple-600">${avgDaily.toLocaleString()}</p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-lg p-6 text-center border-l-4 border-orange-500">
+                        <div class="text-3xl mb-2">🔥</div>
+                        <p class="text-gray-600 text-sm">Best Day</p>
+                        <p class="text-2xl font-bold text-orange-600">${bestDay.steps.toLocaleString()}</p>
+                    </div>
+                </div>
+                
+                <!-- Your Journey -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">🌍 Your Personal Journey</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <div class="text-3xl mb-2">🌏</div>
+                            <p class="text-xl font-bold text-blue-600">${distance} km</p>
+                            <p class="text-sm text-gray-600">Distance Walked</p>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <div class="text-3xl mb-2">🔥</div>
+                            <p class="text-xl font-bold text-green-600">${calories.toLocaleString()}</p>
+                            <p class="text-sm text-gray-600">Calories Burned</p>
+                        </div>
+                        <div class="text-center p-4 bg-purple-50 rounded-lg">
+                            <div class="text-3xl mb-2">⏱️</div>
+                            <p class="text-xl font-bold text-purple-600">${Math.round(totalSteps / 1000 * 10)} hrs</p>
+                            <p class="text-sm text-gray-600">Walking Time</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Badges -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">🏅 Your Achievement Badges (${badges.length})</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        ${badges.map(badge => `
+                            <div class="badge-card badge-${badge.tier}">
+                                <div class="badge-icon">${badge.icon}</div>
+                                <div class="badge-name">${badge.name}</div>
+                                <div class="badge-desc">${badge.desc}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <!-- Weekly Breakdown -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">📅 Weekly Breakdown</h3>
+                    ${userData.weeklyData ? `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            ${userData.weeklyData.map((week, index) => {
+                                const percentage = (week.total / totalSteps) * 100;
+                                const isoBest = week.avgDaily === Math.max(...userData.weeklyData.map(w => w.avgDaily));
+                                return `
+                                    <div class="border-2 ${isoBest ? 'border-green-500 bg-green-50' : 'border-gray-200'} rounded-lg p-4">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h4 class="font-bold text-lg">${week.name} ${isoBest ? '🏆' : ''}</h4>
+                                            <span class="text-sm text-gray-600">${week.daysLogged}/${week.maxDays} days</span>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-sm text-gray-600">Total:</span>
+                                                <span class="font-semibold">${week.total.toLocaleString()} steps</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-sm text-gray-600">Daily Avg:</span>
+                                                <span class="font-semibold">${week.avgDaily.toLocaleString()} steps</span>
+                                            </div>
+                                            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                                                <div class="bg-blue-600 h-2 rounded-full" style="width: ${percentage}%"></div>
+                                            </div>
+                                            <p class="text-xs text-gray-500 text-center">${percentage.toFixed(1)}% of total</p>
+                                        </div>
+                                        ${isoBest ? '<p class="text-xs text-green-600 font-semibold text-center mt-2">✨ Your Best Week!</p>' : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        
+                        <!-- Weekly Chart -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-700 mb-3 text-center">Weekly Progress Chart</h4>
+                            <div class="flex items-end justify-around h-48 gap-2">
+                                ${userData.weeklyData.map(week => {
+                                    const maxWeekly = Math.max(...userData.weeklyData.map(w => w.avgDaily));
+                                    const height = (week.avgDaily / maxWeekly) * 100;
+                                    return `
+                                        <div class="flex-1 flex flex-col items-center">
+                                            <div class="text-xs font-semibold mb-1">${week.avgDaily.toLocaleString()}</div>
+                                            <div class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg" 
+                                                 style="height: ${height}%; min-height: 20px;"
+                                                 title="${week.name}: ${week.avgDaily.toLocaleString()} avg">
+                                            </div>
+                                            <div class="text-xs mt-2 text-gray-600">${week.name.replace('Week ', 'W')}</div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Improvement Analysis -->
+                        ${userData.weeklyData.length >= 2 ? (() => {
+                            const week1Avg = userData.weeklyData[0].avgDaily;
+                            const lastWeekAvg = userData.weeklyData[userData.weeklyData.length - 1].avgDaily;
+                            const improvement = ((lastWeekAvg - week1Avg) / week1Avg) * 100;
+                            return `
+                                <div class="mt-4 p-4 ${improvement >= 0 ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'} border-2 rounded-lg">
+                                    <p class="text-center font-semibold ${improvement >= 0 ? 'text-green-700' : 'text-blue-700'}">
+                                        ${improvement >= 0 ? '📈 ' : '📊 '}
+                                        ${improvement >= 0 ? 'Improved' : 'Changed'} by ${Math.abs(improvement).toFixed(1)}% from Week 1 to Week 4!
+                                    </p>
+                                    <p class="text-xs text-center text-gray-600 mt-1">
+                                        Week 1 avg: ${week1Avg.toLocaleString()} → Week 4 avg: ${lastWeekAvg.toLocaleString()}
+                                    </p>
+                                </div>
+                            `;
+                        })() : ''}
+                    ` : '<p class="text-gray-500 text-center">Weekly data not available</p>'}
+                </div>
+                
+                <!-- Comparison -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">📊 How You Compare</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold">You</span>
+                                <span class="text-blue-600 font-bold">${totalSteps.toLocaleString()}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-6">
+                                <div class="bg-blue-600 h-6 rounded-full" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold">Community Average</span>
+                                <span class="text-gray-600">${communityAvg.toLocaleString()}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-6">
+                                <div class="bg-gray-400 h-6 rounded-full" style="width: ${Math.min((communityAvg/totalSteps)*100, 100)}%"></div>
+                            </div>
+                        </div>
+                        <p class="text-center text-lg font-semibold text-blue-600">
+                            You walked ${Math.round((totalSteps/communityAvg - 1) * 100)}% ${totalSteps > communityAvg ? 'more' : 'less'} than average!
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Personalized Message -->
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg shadow-lg p-8 border-2 border-blue-300">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">💬 Your Personal Message</h3>
+                    <div class="text-gray-700 text-lg whitespace-pre-line">${message}</div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button 
+                        onclick="downloadCertificate()"
+                        class="bg-gradient-to-r from-green-600 to-blue-600 text-white px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all text-lg font-bold"
+                    >
+                        📥 Download Certificate
+                    </button>
+                    <button 
+                        onclick="shareOnWhatsApp()"
+                        class="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all text-lg font-bold"
+                    >
+                        📱 Share on WhatsApp
+                    </button>
+                </div>
+            `;
+            
+            summaryDiv.innerHTML = html;
+            summaryDiv.classList.remove('hidden');
+        }
+        
+        function shareOnWhatsApp() {
+            const selector = document.getElementById('userSelector');
+            if (!selector || !selector.value) return;
+            
+            const uniqueKey = selector.value;
+            const profile = cachedData.profiles.find(p => 
+                createUniqueKey(p.name, p.flatNo) === uniqueKey
+            );
+            
+            if (!profile) return;
+            
+            const userData = calculateUserStats(profile);
+            
+            const text = `🎉 I completed the Apostrophe Steps Challenge 2026!\n\n` +
+                        `📊 My Stats:\n` +
+                        `• Rank: #${userData.rank} of ${userData.totalParticipants}\n` +
+                        `• Total Steps: ${userData.totalSteps.toLocaleString()}\n` +
+                        `• Days Logged: ${userData.daysLogged}/26\n` +
+                        `• Distance: ${userData.distance} km\n\n` +
+                        `💪 What an incredible journey with our Apostrophe family!\n\n` +
+                        `#ApostropheStepsChallenge #HealthyLiving`;
+            
+            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        }
+        
+        function downloadCertificate() {
+            const selector = document.getElementById('userSelector');
+            if (!selector || !selector.value) return;
+            
+            const uniqueKey = selector.value;
+            const profile = cachedData.profiles.find(p => 
+                createUniqueKey(p.name, p.flatNo) === uniqueKey
+            );
+            
+            if (!profile) return;
+            
+            const userData = calculateUserStats(profile);
+            const badges = calculateBadges(userData);
+            
+            // Determine certificate tier and colors
+            let tier, borderColor, bgColor, title, medalEmoji;
+            if (userData.rank === 1) {
+                tier = 'Champion';
+                borderColor = '#FFD700';
+                bgColor = '#FFF8DC';
+                title = 'CERTIFICATE OF OUTSTANDING ACHIEVEMENT';
+                medalEmoji = '🥇';
+            } else if (userData.rank === 2) {
+                tier = 'Silver';
+                borderColor = '#C0C0C0';
+                bgColor = '#F5F5F5';
+                title = 'CERTIFICATE OF OUTSTANDING ACHIEVEMENT';
+                medalEmoji = '🥈';
+            } else if (userData.rank === 3) {
+                tier = 'Bronze';
+                borderColor = '#CD7F32';
+                bgColor = '#FFE4B5';
+                title = 'CERTIFICATE OF OUTSTANDING ACHIEVEMENT';
+                medalEmoji = '🥉';
+            } else if (userData.rank <= 10) {
+                tier = 'Elite';
+                borderColor = '#4A90E2';
+                bgColor = '#E3F2FD';
+                title = 'CERTIFICATE OF EXCELLENCE';
+                medalEmoji = '⭐';
+            } else {
+                tier = 'Participant';
+                borderColor = '#32CD32';
+                bgColor = '#F0FFF0';
+                title = 'CERTIFICATE OF PARTICIPATION';
+                medalEmoji = '✨';
+            }
+            
+            // Create certificate HTML
+            const certificateHTML = `
+                <div id="certificate" style="width: 210mm; padding: 20mm; background: white; font-family: Arial, sans-serif;">
+                    <div style="border: 8px double ${borderColor}; padding: 30px; background: ${bgColor};">
+                        <!-- Header -->
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h1 style="font-size: 28px; color: #333; margin: 0;">🏃 APOSTROPHE SOCIETY 🏃</h1>
+                            <div style="border-bottom: 3px solid ${borderColor}; margin: 15px auto; width: 300px;"></div>
+                        </div>
+                        
+                        <!-- Title -->
+                        <h2 style="text-align: center; font-size: 18px; color: #555; margin: 20px 0;">${title}</h2>
+                        <h3 style="text-align: center; font-size: 16px; color: #666; margin: 10px 0;">STEPS CHALLENGE 2026</h3>
+                        <p style="text-align: center; font-size: 12px; color: #888; margin: 5px 0;">January 1 - 26, 2026</p>
+                        
+                        <div style="border-bottom: 2px solid ${borderColor}; margin: 20px auto; width: 400px;"></div>
+                        
+                        <!-- Name Section -->
+                        <p style="text-align: center; font-size: 14px; color: #555; margin: 20px 0;">THIS CERTIFIES THAT</p>
+                        <h1 style="text-align: center; font-size: 32px; color: #333; margin: 15px 0;">${medalEmoji} ${profile.name.toUpperCase()} ${medalEmoji}</h1>
+                        <p style="text-align: center; font-size: 14px; color: #666; margin: 10px 0;">Building ${profile.flatNo.charAt(0)} • Flat ${profile.flatNo}</p>
+                        
+                        <!-- Achievement Summary -->
+                        <div style="border: 2px solid ${borderColor}; border-radius: 10px; padding: 20px; margin: 25px 0; background: white;">
+                            <h3 style="text-align: center; font-size: 16px; color: #333; margin-bottom: 15px;">ACHIEVEMENT SUMMARY</h3>
+                            <table style="width: 100%; font-size: 13px; color: #555;">
+                                <tr>
+                                    <td style="padding: 8px;"><strong>🏆 Overall Rank:</strong></td>
+                                    <td style="padding: 8px; text-align: right;">#${userData.rank} of ${userData.totalParticipants} Participants</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px;"><strong>📊 Total Steps:</strong></td>
+                                    <td style="padding: 8px; text-align: right;">${userData.totalSteps.toLocaleString()} steps</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px;"><strong>💪 Daily Average:</strong></td>
+                                    <td style="padding: 8px; text-align: right;">${userData.avgDaily.toLocaleString()} steps/day</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px;"><strong>📅 Participation:</strong></td>
+                                    <td style="padding: 8px; text-align: right;">${userData.daysLogged}/26 days (${Math.round(userData.daysLogged/26*100)}%)</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px;"><strong>🌍 Distance Walked:</strong></td>
+                                    <td style="padding: 8px; text-align: right;">${userData.distance} kilometers</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px;"><strong>🔥 Calories Burned:</strong></td>
+                                    <td style="padding: 8px; text-align: right;">${userData.calories.toLocaleString()} kcal</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px;"><strong>🏅 Achievement Level:</strong></td>
+                                    <td style="padding: 8px; text-align: right;">${tier}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <!-- Badges -->
+                        <div style="border: 2px solid ${borderColor}; border-radius: 10px; padding: 15px; margin: 20px 0; background: white;">
+                            <h3 style="text-align: center; font-size: 14px; color: #333; margin-bottom: 10px;">BADGES & ACHIEVEMENTS EARNED</h3>
+                            <div style="font-size: 11px; color: #555; line-height: 1.8;">
+                                ${badges.slice(0, 12).map((badge, i) => {
+                                    if (i % 2 === 0) {
+                                        const nextBadge = badges[i + 1];
+                                        return `<div style="display: flex; justify-content: space-between; margin: 4px 0;">
+                                            <div style="flex: 1;">${badge.icon} ${badge.name} - ${badge.desc}</div>
+                                            ${nextBadge ? `<div style="flex: 1;">${nextBadge.icon} ${nextBadge.name} - ${nextBadge.desc}</div>` : ''}
+                                        </div>`;
+                                    }
+                                    return '';
+                                }).join('')}
+                                <p style="text-align: center; margin-top: 10px; font-weight: bold;">Total: ${badges.length} Badges Earned</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Recognition Text -->
+                        <p style="text-align: center; font-size: 12px; color: #555; margin: 20px 0; line-height: 1.6;">
+                            In recognition of ${userData.rank <= 3 ? 'outstanding dedication, exceptional performance,' : 'dedication,'} 
+                            consistency, and commitment to health and wellness within our community.
+                            ${userData.daysLogged === 26 ? '<br><strong>Perfect attendance - logged all 26 days!</strong>' : ''}
+                        </p>
+                        
+                        ${userData.rank <= 3 ? `<p style="text-align: center; font-size: 13px; color: #333; font-weight: bold; margin: 15px 0;">
+                            Your achievement inspires the entire community!
+                        </p>` : ''}
+                        
+                        <!-- Footer -->
+                        <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 11px; color: #666;">
+                            <div>Certificate No: AC2026-${String(userData.rank).padStart(3, '0')}</div>
+                            <div>Date: January 26, 2026</div>
+                        </div>
+                        
+                        <div style="margin-top: 30px; display: flex; justify-content: space-around;">
+                            <div style="text-align: center; border-top: 1px solid #999; padding-top: 5px; width: 200px;">
+                                <p style="font-size: 11px; color: #666;">Challenge Organizers</p>
+                            </div>
+                            <div style="text-align: center; border-top: 1px solid #999; padding-top: 5px; width: 200px;">
+                                <p style="font-size: 11px; color: #666;">Community President</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Create temporary container
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = certificateHTML;
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px';
+            document.body.appendChild(tempDiv);
+            
+            // Generate PDF
+            const element = tempDiv.querySelector('#certificate');
+            const opt = {
+                margin: 0,
+                filename: `Apostrophe_Steps_Challenge_2026_${profile.name.replace(/\s+/g, '_')}_Certificate.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                document.body.removeChild(tempDiv);
+            });
+        }
+        
     </script>
 </body>
 </html>
