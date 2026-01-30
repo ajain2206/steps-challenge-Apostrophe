@@ -704,28 +704,30 @@
 
         // Calculate completion percentage and missing days
         function calculateCompletion(uniqueKey, allSteps) {
-            // Get date range (Jan 1 to today)
-            const startDate = new Date('2026-01-01');
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
+            // FIXED: Challenge is exactly Jan 1-25, 2026 (25 days)
+            const CHALLENGE_START = '2026-01-01';
+            const CHALLENGE_END = '2026-01-25';
             
-            // Generate all dates from start to today
+            // Generate exactly 25 dates (Jan 1-25)
             const allDates = [];
-            let currentDate = new Date(startDate);
-            while (currentDate <= today) {
-                allDates.push(currentDate.toISOString().split('T')[0]);
-                currentDate.setDate(currentDate.getDate() + 1);
+            for (let day = 1; day <= 25; day++) {
+                const dateStr = `2026-01-${String(day).padStart(2, '0')}`;
+                allDates.push(dateStr);
             }
             
-            // Get dates when user submitted steps
+            // Get dates when user submitted steps (only up to Jan 25)
             const userSteps = allSteps.filter(s => {
                 const stepKey = s.uniqueKey || createUniqueKey(s.name, s.flatNo);
-                return stepKey === uniqueKey;
+                const stepDate = s.date instanceof Date 
+                    ? s.date.toISOString().split('T')[0]
+                    : (typeof s.date === 'string' ? s.date.split('T')[0] : s.date);
+                
+                // Only include steps up to Jan 25
+                return stepKey === uniqueKey && stepDate >= CHALLENGE_START && stepDate <= CHALLENGE_END;
             });
             
             const submittedDates = new Set(
                 userSteps.map(s => {
-                    // Handle both Date objects and string dates
                     const dateStr = s.date instanceof Date 
                         ? s.date.toISOString().split('T')[0]
                         : (typeof s.date === 'string' ? s.date.split('T')[0] : s.date);
@@ -733,7 +735,7 @@
                 })
             );
             
-            const totalDays = allDates.length;
+            const totalDays = 25;  // FIXED: Always 25 days
             const daysSubmitted = submittedDates.size;
             const daysMissing = totalDays - daysSubmitted;
             const percentage = totalDays > 0 ? Math.round((daysSubmitted / totalDays) * 100) : 0;
@@ -1084,13 +1086,16 @@
             // Sort building data alphabetically for consistent display
             buildingData.sort((a, b) => a[0].localeCompare(b[0]));
             
-            // Calculate total days from start to today
+            // Calculate total days - Challenge is Jan 1-25, 2026 (25 days)
             const startDate = new Date('2026-01-01');
+            const challengeEnd = new Date('2026-01-25');
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const totalDays = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24)) + 1; // +1 to include start day
             
-            console.log(`Total days in challenge: ${totalDays} (Jan 1 to ${today.toISOString().split('T')[0]})`);
+            // FIXED: Challenge is exactly 25 days (Jan 1-25, 2026)
+            const totalDays = 25;
+            
+            console.log(`Total days in challenge: ${totalDays} (FIXED: Always 25 days for Jan 1-25, 2026)`);
             
             // Calculate building stats - all 5 metrics
             const buildingStats = {};
@@ -2733,11 +2738,9 @@
             const userData = calculateUserStats(profile);
             const badges = calculateBadges(userData);
             
-            console.log('Generating certificate for:', profile.name);
-            console.log('User data:', userData);
-            console.log('Badges count:', badges.length);
+            console.log('Generating certificate for:', profile.name, '- Rank:', userData.rank);
             
-            // Determine certificate tier
+            // Determine tier
             let tier, borderColor, bgColor, title, medalEmoji;
             if (userData.rank === 1) {
                 tier = 'Champion'; borderColor = '#FFD700'; bgColor = '#FFF8DC';
@@ -2756,109 +2759,314 @@
                 title = 'CERTIFICATE OF PARTICIPATION'; medalEmoji = '✨';
             }
             
-            // Create badge list HTML
-            let badgeHTML = '';
-            badges.slice(0, 12).forEach((badge, i) => {
-                if (i % 2 === 0) {
-                    badgeHTML += '<div style="display: flex; justify-content: space-between; margin: 4px 0;">';
-                    badgeHTML += '<div style="flex: 1;">' + badge.icon + ' ' + badge.name + ' - ' + badge.desc + '</div>';
-                    if (badges[i + 1]) {
-                        const nextBadge = badges[i + 1];
-                        badgeHTML += '<div style="flex: 1;">' + nextBadge.icon + ' ' + nextBadge.name + ' - ' + nextBadge.desc + '</div>';
-                    }
-                    badgeHTML += '</div>';
+            // Build badges rows
+            let badgeRows = '';
+            for (let i = 0; i < Math.min(badges.length, 12); i += 2) {
+                badgeRows += '<tr>';
+                badgeRows += '<td style="padding: 5px; font-size: 12px; border-bottom: 1px solid #eee;">' + 
+                            badges[i].icon + ' ' + badges[i].name + ' - ' + badges[i].desc + '</td>';
+                if (badges[i + 1]) {
+                    badgeRows += '<td style="padding: 5px; font-size: 12px; border-bottom: 1px solid #eee;">' + 
+                                badges[i + 1].icon + ' ' + badges[i + 1].name + ' - ' + badges[i + 1].desc + '</td>';
+                } else {
+                    badgeRows += '<td style="border-bottom: 1px solid #eee;"></td>';
                 }
-            });
+                badgeRows += '</tr>';
+            }
             
-            // Create certificate container
-            const certDiv = document.createElement('div');
-            certDiv.id = 'certificateToPrint';
-            certDiv.style.width = '210mm';
-            certDiv.style.padding = '20mm';
-            certDiv.style.background = 'white';
-            certDiv.style.fontFamily = 'Arial, sans-serif';
+            // Create complete HTML document
+            const certificateHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Certificate - ${profile.name}</title>
+    <style>
+        @media print {
+            body { margin: 0; padding: 20mm; }
+            .no-print { display: none; }
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .certificate-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+        }
+        .certificate-border {
+            border: 8px double ${borderColor};
+            padding: 30px;
+            background: ${bgColor};
+        }
+        .cert-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .cert-header h1 {
+            font-size: 36px;
+            color: #333;
+            margin: 0;
+        }
+        .cert-divider {
+            border-bottom: 3px solid ${borderColor};
+            margin: 15px auto;
+            width: 400px;
+        }
+        .cert-title {
+            text-align: center;
+            font-size: 20px;
+            color: #555;
+            margin: 20px 0;
+        }
+        .cert-subtitle {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+            margin: 10px 0;
+        }
+        .cert-date {
+            text-align: center;
+            font-size: 13px;
+            color: #888;
+            margin: 5px 0;
+        }
+        .cert-label {
+            text-align: center;
+            font-size: 15px;
+            color: #555;
+            margin: 20px 0;
+        }
+        .cert-name {
+            text-align: center;
+            font-size: 42px;
+            color: #333;
+            margin: 15px 0;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+        .cert-flat {
+            text-align: center;
+            font-size: 16px;
+            color: #666;
+            margin: 10px 0;
+        }
+        .stats-box {
+            border: 3px solid ${borderColor};
+            border-radius: 10px;
+            padding: 25px;
+            margin: 30px 0;
+            background: white;
+        }
+        .stats-title {
+            text-align: center;
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .stats-table {
+            width: 100%;
+            font-size: 15px;
+            color: #555;
+        }
+        .stats-table td {
+            padding: 12px;
+        }
+        .stats-table td:last-child {
+            text-align: right;
+            font-weight: bold;
+        }
+        .badges-box {
+            border: 3px solid ${borderColor};
+            border-radius: 10px;
+            padding: 20px;
+            margin: 25px 0;
+            background: white;
+        }
+        .badges-title {
+            text-align: center;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .badges-table {
+            width: 100%;
+        }
+        .badges-count {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .cert-message {
+            text-align: center;
+            font-size: 14px;
+            color: #555;
+            margin: 25px 0;
+            line-height: 1.8;
+        }
+        .cert-footer {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+        }
+        .cert-signatures {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-around;
+        }
+        .signature-line {
+            text-align: center;
+            border-top: 2px solid #999;
+            padding-top: 10px;
+            width: 250px;
+        }
+        .button-container {
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        .print-button {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+        }
+        .print-button:hover {
+            background: #2563eb;
+        }
+        .close-button {
+            background: #ef4444;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+        }
+        .close-button:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="button-container no-print">
+        <button class="print-button" onclick="window.print()">🖨️ Print to PDF</button>
+        <button class="close-button" onclick="window.close()">Close</button>
+        <p style="margin-top: 10px; font-size: 13px; color: #666;">
+            Click "Print to PDF", then select "Save as PDF" as your printer
+        </p>
+    </div>
+
+    <div class="certificate-container">
+        <div class="certificate-border">
+            <div class="cert-header">
+                <h1>🏃 APOSTROPHE SOCIETY 🏃</h1>
+                <div class="cert-divider"></div>
+            </div>
             
-            certDiv.innerHTML = 
-                '<div style="border: 8px double ' + borderColor + '; padding: 30px; background: ' + bgColor + ';">' +
-                    '<div style="text-align: center; margin-bottom: 20px;">' +
-                        '<h1 style="font-size: 28px; color: #333; margin: 0;">🏃 APOSTROPHE SOCIETY 🏃</h1>' +
-                        '<div style="border-bottom: 3px solid ' + borderColor + '; margin: 15px auto; width: 300px;"></div>' +
-                    '</div>' +
-                    '<h2 style="text-align: center; font-size: 18px; color: #555; margin: 20px 0;">' + title + '</h2>' +
-                    '<h3 style="text-align: center; font-size: 16px; color: #666; margin: 10px 0;">STEPS CHALLENGE 2026</h3>' +
-                    '<p style="text-align: center; font-size: 12px; color: #888; margin: 5px 0;">January 1 - 25, 2026</p>' +
-                    '<div style="border-bottom: 2px solid ' + borderColor + '; margin: 20px auto; width: 400px;"></div>' +
-                    '<p style="text-align: center; font-size: 14px; color: #555; margin: 20px 0;">THIS CERTIFIES THAT</p>' +
-                    '<h1 style="text-align: center; font-size: 32px; color: #333; margin: 15px 0;">' + medalEmoji + ' ' + profile.name.toUpperCase() + ' ' + medalEmoji + '</h1>' +
-                    '<p style="text-align: center; font-size: 14px; color: #666; margin: 10px 0;">Building ' + profile.flatNo.charAt(0) + ' • Flat ' + profile.flatNo + '</p>' +
-                    '<div style="border: 2px solid ' + borderColor + '; border-radius: 10px; padding: 20px; margin: 25px 0; background: white;">' +
-                        '<h3 style="text-align: center; font-size: 16px; color: #333; margin-bottom: 15px;">ACHIEVEMENT SUMMARY</h3>' +
-                        '<table style="width: 100%; font-size: 13px; color: #555;">' +
-                            '<tr><td style="padding: 8px;"><strong>🏆 Overall Rank:</strong></td><td style="padding: 8px; text-align: right;">#' + userData.rank + ' of ' + userData.totalParticipants + ' Participants</td></tr>' +
-                            '<tr><td style="padding: 8px;"><strong>📊 Total Steps:</strong></td><td style="padding: 8px; text-align: right;">' + userData.totalSteps.toLocaleString() + ' steps</td></tr>' +
-                            '<tr><td style="padding: 8px;"><strong>💪 Daily Average:</strong></td><td style="padding: 8px; text-align: right;">' + userData.avgDaily.toLocaleString() + ' steps/day</td></tr>' +
-                            '<tr><td style="padding: 8px;"><strong>📅 Participation:</strong></td><td style="padding: 8px; text-align: right;">' + userData.daysLogged + '/25 days (' + Math.round(userData.daysLogged/25*100) + '%)</td></tr>' +
-                            '<tr><td style="padding: 8px;"><strong>🌍 Distance Walked:</strong></td><td style="padding: 8px; text-align: right;">' + userData.distance + ' kilometers</td></tr>' +
-                            '<tr><td style="padding: 8px;"><strong>🔥 Calories Burned:</strong></td><td style="padding: 8px; text-align: right;">' + userData.calories.toLocaleString() + ' kcal</td></tr>' +
-                            '<tr><td style="padding: 8px;"><strong>🏅 Achievement Level:</strong></td><td style="padding: 8px; text-align: right;">' + tier + '</td></tr>' +
-                        '</table>' +
-                    '</div>' +
-                    '<div style="border: 2px solid ' + borderColor + '; border-radius: 10px; padding: 15px; margin: 20px 0; background: white;">' +
-                        '<h3 style="text-align: center; font-size: 14px; color: #333; margin-bottom: 10px;">BADGES & ACHIEVEMENTS EARNED</h3>' +
-                        '<div style="font-size: 11px; color: #555; line-height: 1.8;">' +
-                            badgeHTML +
-                            '<p style="text-align: center; margin-top: 10px; font-weight: bold;">Total: ' + badges.length + ' Badges Earned</p>' +
-                        '</div>' +
-                    '</div>' +
-                    '<p style="text-align: center; font-size: 12px; color: #555; margin: 20px 0; line-height: 1.6;">' +
-                        'In recognition of ' + (userData.rank <= 3 ? 'outstanding dedication, exceptional performance,' : 'dedication,') + ' consistency, and commitment to health and wellness within our community.' +
-                        (userData.daysLogged === 25 ? '<br><strong>Perfect attendance - logged all 25 days!</strong>' : '') +
-                    '</p>' +
-                    (userData.rank <= 3 ? '<p style="text-align: center; font-size: 13px; color: #333; font-weight: bold; margin: 15px 0;">Your achievement inspires the entire community!</p>' : '') +
-                    '<div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 11px; color: #666;">' +
-                        '<div>Certificate No: AC2026-' + String(userData.rank).padStart(3, '0') + '</div>' +
-                        '<div>Date: January 25, 2026</div>' +
-                    '</div>' +
-                    '<div style="margin-top: 30px; display: flex; justify-content: space-around;">' +
-                        '<div style="text-align: center; border-top: 1px solid #999; padding-top: 5px; width: 200px;"><p style="font-size: 11px; color: #666;">Challenge Organizers</p></div>' +
-                        '<div style="text-align: center; border-top: 1px solid #999; padding-top: 5px; width: 200px;"><p style="font-size: 11px; color: #666;">Community President</p></div>' +
-                    '</div>' +
-                '</div>';
+            <h2 class="cert-title">${title}</h2>
+            <h3 class="cert-subtitle">STEPS CHALLENGE 2026</h3>
+            <p class="cert-date">January 1 - 25, 2026</p>
             
-            // Add to page (hidden)
-            certDiv.style.position = 'absolute';
-            certDiv.style.left = '-9999px';
-            certDiv.style.top = '0';
-            document.body.appendChild(certDiv);
+            <div class="cert-divider" style="margin: 25px auto;"></div>
             
-            console.log('Certificate HTML added to DOM');
+            <p class="cert-label">THIS CERTIFIES THAT</p>
+            <h1 class="cert-name">${medalEmoji} ${profile.name.toUpperCase()} ${medalEmoji}</h1>
+            <p class="cert-flat">Building ${profile.flatNo.charAt(0)} • Flat ${profile.flatNo}</p>
             
-            // Generate PDF
-            const filename = 'Apostrophe_Steps_Challenge_2026_' + profile.name.replace(/\s+/g, '_') + '_Certificate.pdf';
+            <div class="stats-box">
+                <div class="stats-title">ACHIEVEMENT SUMMARY</div>
+                <table class="stats-table">
+                    <tr>
+                        <td>🏆 Overall Rank:</td>
+                        <td>#${userData.rank} of ${userData.totalParticipants} Participants</td>
+                    </tr>
+                    <tr>
+                        <td>📊 Total Steps:</td>
+                        <td>${userData.totalSteps.toLocaleString()} steps</td>
+                    </tr>
+                    <tr>
+                        <td>💪 Daily Average:</td>
+                        <td>${userData.avgDaily.toLocaleString()} steps/day</td>
+                    </tr>
+                    <tr>
+                        <td>📅 Participation:</td>
+                        <td>${userData.daysLogged}/25 days (${Math.round(userData.daysLogged/25*100)}%)</td>
+                    </tr>
+                    <tr>
+                        <td>🌍 Distance Walked:</td>
+                        <td>${userData.distance} kilometers</td>
+                    </tr>
+                    <tr>
+                        <td>🔥 Calories Burned:</td>
+                        <td>${userData.calories.toLocaleString()} kcal</td>
+                    </tr>
+                    <tr>
+                        <td>🏅 Achievement Level:</td>
+                        <td>${tier}</td>
+                    </tr>
+                </table>
+            </div>
             
-            setTimeout(function() {
-                console.log('Starting PDF generation...');
-                
-                html2pdf()
-                    .set({
-                        margin: 0,
-                        filename: filename,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, logging: false },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                    })
-                    .from(certDiv)
-                    .save()
-                    .then(function() {
-                        console.log('PDF saved successfully!');
-                        document.body.removeChild(certDiv);
-                    })
-                    .catch(function(error) {
-                        console.error('Error generating PDF:', error);
-                        alert('Error generating PDF. Check console for details.');
-                        document.body.removeChild(certDiv);
-                    });
-            }, 200);
+            <div class="badges-box">
+                <div class="badges-title">BADGES & ACHIEVEMENTS EARNED</div>
+                <table class="badges-table">
+                    ${badgeRows}
+                </table>
+                <p class="badges-count">Total: ${badges.length} Badges Earned</p>
+            </div>
+            
+            <p class="cert-message">
+                In recognition of ${userData.rank <= 3 ? 'outstanding dedication, exceptional performance,' : 'dedication,'} 
+                consistency, and commitment to health and wellness within our community.
+                ${userData.daysLogged === 25 ? '<br><strong>Perfect attendance - logged all 25 days!</strong>' : ''}
+            </p>
+            
+            ${userData.rank <= 3 ? '<p class="cert-message" style="font-weight: bold; font-size: 16px;">Your achievement inspires the entire community!</p>' : ''}
+            
+            <div class="cert-footer">
+                <div>Certificate No: AC2026-${String(userData.rank).padStart(3, '0')}</div>
+                <div>Date: January 25, 2026</div>
+            </div>
+            
+            <div class="cert-signatures">
+                <div class="signature-line">
+                    <p>Challenge Organizers</p>
+                </div>
+                <div class="signature-line">
+                    <p>Community President</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+            
+            // Open in new window
+            const newWindow = window.open('', '_blank', 'width=900,height=1100');
+            if (newWindow) {
+                newWindow.document.write(certificateHTML);
+                newWindow.document.close();
+                console.log('Certificate opened in new window!');
+            } else {
+                alert('Pop-up blocked! Please allow pop-ups for this site to generate certificate.');
+            }
         }
         
     </script>
