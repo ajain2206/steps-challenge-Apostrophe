@@ -569,33 +569,7 @@
             // Check for milestone celebrations
             checkMilestones(totalSteps);
             
-            // Update participant dropdown
-            populateParticipantDropdown(data.profiles);
-        }
-
-        // Populate dropdown with registered participants
-        function populateParticipantDropdown(profiles) {
-            const select = document.getElementById('participantSelect');
-            
-            // Clear existing options except the first placeholder
-            select.innerHTML = '<option value="">-- Select from registered participants --</option>';
-            
-            // Sort profiles alphabetically by name
-            const sortedProfiles = [...profiles].sort((a, b) => a.name.localeCompare(b.name));
-            
-            // Add option for each registered participant
-            sortedProfiles.forEach(profile => {
-                const option = document.createElement('option');
-                const uniqueKey = profile.uniqueKey || createUniqueKey(profile.name, profile.flatNo);
-                
-                // Value format: "uniqueKey|Name|FlatNo"
-                option.value = `${uniqueKey}|${profile.name}|${profile.flatNo}`;
-                
-                // Display format: "Name (Flat No)"
-                option.textContent = `${profile.name} (${profile.flatNo})`;
-                
-                select.appendChild(option);
-            });
+            // Note: No longer calling populateParticipantDropdown - that was for the old submit form
         }
 
         // Load leaderboard (all participants with sort and filter)
