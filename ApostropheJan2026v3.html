@@ -2763,10 +2763,10 @@
             let badgeRows = '';
             for (let i = 0; i < Math.min(badges.length, 12); i += 2) {
                 badgeRows += '<tr>';
-                badgeRows += '<td style="padding: 5px; font-size: 12px; border-bottom: 1px solid #eee;">' + 
+                badgeRows += '<td style="padding: 3px; font-size: 11px; border-bottom: 1px solid #eee;">' + 
                             badges[i].icon + ' ' + badges[i].name + ' - ' + badges[i].desc + '</td>';
                 if (badges[i + 1]) {
-                    badgeRows += '<td style="padding: 5px; font-size: 12px; border-bottom: 1px solid #eee;">' + 
+                    badgeRows += '<td style="padding: 3px; font-size: 11px; border-bottom: 1px solid #eee;">' + 
                                 badges[i + 1].icon + ' ' + badges[i + 1].name + ' - ' + badges[i + 1].desc + '</td>';
                 } else {
                     badgeRows += '<td style="border-bottom: 1px solid #eee;"></td>';
@@ -2783,116 +2783,116 @@
     <title>Certificate - ${profile.name}</title>
     <style>
         @media print {
-            body { margin: 0; padding: 20mm; }
+            body { margin: 0; padding: 5mm; }
             .no-print { display: none; }
         }
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             background: #f5f5f5;
         }
         .certificate-container {
             max-width: 800px;
             margin: 0 auto;
             background: white;
-            padding: 40px;
+            padding: 10px;
         }
         .certificate-border {
-            border: 8px double ${borderColor};
-            padding: 30px;
+            border: 5px double ${borderColor};
+            padding: 15px;
             background: ${bgColor};
         }
         .cert-header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
         }
         .cert-header h1 {
-            font-size: 36px;
+            font-size: 28px;
             color: #333;
             margin: 0;
         }
         .cert-divider {
-            border-bottom: 3px solid ${borderColor};
-            margin: 15px auto;
-            width: 400px;
+            border-bottom: 2px solid ${borderColor};
+            margin: 8px auto;
+            width: 350px;
         }
         .cert-title {
             text-align: center;
-            font-size: 20px;
+            font-size: 17px;
             color: #555;
-            margin: 20px 0;
+            margin: 10px 0;
         }
         .cert-subtitle {
             text-align: center;
-            font-size: 18px;
+            font-size: 15px;
             color: #666;
-            margin: 10px 0;
+            margin: 6px 0;
         }
         .cert-date {
             text-align: center;
-            font-size: 13px;
+            font-size: 11px;
             color: #888;
-            margin: 5px 0;
+            margin: 3px 0;
         }
         .cert-label {
             text-align: center;
-            font-size: 15px;
+            font-size: 13px;
             color: #555;
-            margin: 20px 0;
+            margin: 8px 0;
         }
         .cert-name {
             text-align: center;
-            font-size: 42px;
+            font-size: 32px;
             color: #333;
-            margin: 15px 0;
-            letter-spacing: 2px;
+            margin: 8px 0;
+            letter-spacing: 1px;
             font-weight: bold;
         }
         .cert-flat {
             text-align: center;
-            font-size: 16px;
+            font-size: 13px;
             color: #666;
-            margin: 10px 0;
+            margin: 6px 0;
         }
         .stats-box {
-            border: 3px solid ${borderColor};
-            border-radius: 10px;
-            padding: 25px;
-            margin: 30px 0;
+            border: 2px solid ${borderColor};
+            border-radius: 6px;
+            padding: 12px;
+            margin: 10px 0;
             background: white;
         }
         .stats-title {
             text-align: center;
-            font-size: 18px;
+            font-size: 15px;
             color: #333;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             font-weight: bold;
         }
         .stats-table {
             width: 100%;
-            font-size: 15px;
+            font-size: 12px;
             color: #555;
         }
         .stats-table td {
-            padding: 12px;
+            padding: 5px;
         }
         .stats-table td:last-child {
             text-align: right;
             font-weight: bold;
         }
         .badges-box {
-            border: 3px solid ${borderColor};
-            border-radius: 10px;
-            padding: 20px;
-            margin: 25px 0;
+            border: 2px solid ${borderColor};
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
             background: white;
         }
         .badges-title {
             text-align: center;
-            font-size: 16px;
+            font-size: 13px;
             color: #333;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             font-weight: bold;
         }
         .badges-table {
@@ -2900,34 +2900,34 @@
         }
         .badges-count {
             text-align: center;
-            margin-top: 15px;
+            margin-top: 8px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 11px;
         }
         .cert-message {
             text-align: center;
-            font-size: 14px;
+            font-size: 11px;
             color: #555;
-            margin: 25px 0;
-            line-height: 1.8;
+            margin: 10px 0;
+            line-height: 1.5;
         }
         .cert-footer {
-            margin-top: 40px;
+            margin-top: 15px;
             display: flex;
             justify-content: space-between;
-            font-size: 12px;
+            font-size: 10px;
             color: #666;
         }
         .cert-signatures {
-            margin-top: 40px;
+            margin-top: 15px;
             display: flex;
             justify-content: space-around;
         }
         .signature-line {
             text-align: center;
-            border-top: 2px solid #999;
-            padding-top: 10px;
-            width: 250px;
+            border-top: 1px solid #999;
+            padding-top: 6px;
+            width: 180px;
         }
         .button-container {
             text-align: center;
@@ -2984,7 +2984,7 @@
             <h3 class="cert-subtitle">STEPS CHALLENGE 2026</h3>
             <p class="cert-date">January 1 - 25, 2026</p>
             
-            <div class="cert-divider" style="margin: 25px auto;"></div>
+            <div class="cert-divider" style="margin: 8px auto;"></div>
             
             <p class="cert-label">THIS CERTIFIES THAT</p>
             <h1 class="cert-name">${medalEmoji} ${profile.name.toUpperCase()} ${medalEmoji}</h1>
@@ -3038,19 +3038,16 @@
                 ${userData.daysLogged === 25 ? '<br><strong>Perfect attendance - logged all 25 days!</strong>' : ''}
             </p>
             
-            ${userData.rank <= 3 ? '<p class="cert-message" style="font-weight: bold; font-size: 16px;">Your achievement inspires the entire community!</p>' : ''}
+            ${userData.rank <= 3 ? '<p class="cert-message" style="font-weight: bold; font-size: 13px;">Your achievement inspires the entire community!</p>' : ''}
             
             <div class="cert-footer">
                 <div>Certificate No: AC2026-${String(userData.rank).padStart(3, '0')}</div>
                 <div>Date: January 25, 2026</div>
             </div>
             
-            <div class="cert-signatures">
+            <div class="cert-signatures" style="justify-content: center;">
                 <div class="signature-line">
                     <p>Challenge Organizers</p>
-                </div>
-                <div class="signature-line">
-                    <p>Community President</p>
                 </div>
             </div>
         </div>
