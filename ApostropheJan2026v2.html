@@ -92,15 +92,6 @@
             </p>
         </div>
 
-        <!-- View Community Dashboard Button -->
-        <div class="flex justify-center mb-6">
-            <button
-                onclick="toggleDashboard()"
-                class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all text-base sm:text-lg font-bold"
-            >
-                📊 View Community Dashboard
-            </button>
-        </div>
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
@@ -462,19 +453,29 @@
 
         // Fetch data from Google Sheets
         async function fetchData() {
+            console.log('Fetching data from:', SCRIPT_URL);
             try {
                 const response = await fetch(SCRIPT_URL);
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                console.log('Data received:', data);
                 
                 if (data.success) {
                     cachedData = data;
+                    console.log('Profiles loaded:', data.profiles.length);
+                    console.log('Step entries loaded:', data.steps.length);
                     return data;
                 } else {
-                    throw new Error(data.message || 'Failed to fetch data');
+                    throw new Error(data.message || 'Failed to fetch data - success=false');
                 }
             } catch (error) {
                 console.error('Error fetching data:', error);
-                showStatus('submitStatus', 'Error loading data. Please refresh the page.', 'error');
+                alert(`Error loading data:\n${error.message}\n\nPlease check:\n1. SCRIPT_URL is correct\n2. Google Apps Script is deployed\n3. Script has proper permissions\n\nCheck browser console for details.`);
                 return null;
             }
         }
@@ -2109,8 +2110,10 @@
         // Initialize on page load
         window.onload = async function() {
             // Check if SCRIPT_URL is set
-            if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+            if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' || SCRIPT_URL === '') {
                 document.getElementById('setupNotice').classList.remove('hidden');
+                console.error('SCRIPT_URL not configured!');
+                return;
             } else {
                 document.getElementById('setupNotice').classList.add('hidden');
             }
@@ -2123,6 +2126,29 @@
                 userSelector.addEventListener('change', function() {
                     generateBtn.disabled = !this.value;
                 });
+            }
+            
+            // AUTO-LOAD DASHBOARD ON PAGE LOAD
+            console.log('Auto-loading dashboard...');
+            try {
+                const dashboard = document.getElementById('dashboard');
+                const userSelector = document.getElementById('userSelectorSection');
+                
+                // Show dashboard and user selector
+                dashboard.classList.remove('hidden');
+                userSelector.classList.remove('hidden');
+                
+                // Load data
+                await loadData();
+                
+                // Load all dashboard components
+                loadDashboard();
+                populateUserSelector();
+                
+                console.log('Dashboard loaded successfully!');
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                alert('Error loading data. Please check:\n1. SCRIPT_URL is correct\n2. Google Apps Script is deployed\n3. Check browser console for errors');
             }
         };
         
